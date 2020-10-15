@@ -45,7 +45,7 @@ async function main(): Promise<void> {
       if (typeof key !== 'string' || typeof value !== 'string' || !value) {
         throw new Error(`Invalid asset definition: ${key}: ${value}`);
       }
-      const entries = await fg(['.editorconfig', '**/index.js'], { dot: true });
+      const entries = await fg(value, { dot: true });
       if (!entries.length) {
         throw new Error(`Didn't find any matches for pattern ${value}`);
       }
