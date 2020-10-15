@@ -217,7 +217,7 @@ function main() {
                 }
             }
             // Measure asset sizes
-            const assetSizes = groupAssetRecordsByName(yield measureAssetSizes(assets));
+            const assetSizes = groupAssetRecordsByName(yield measureAssetSizes(assets, { log: true }));
             // Output total size
             const [totalSize, totalCompressedSize] = assetSizes.reduce(([size, compressedSize], record) => [
                 size + record.size,
@@ -225,16 +225,21 @@ function main() {
             ], [0, 0]);
             core.setOutput('totalSize', totalSize);
             core.setOutput('totalCompressedSize', totalCompressedSize);
-            // Get branch, changeset, changeset title, base revision
+            // Get push metadata
             const branch = getBranch();
             const changeset = process.env.GITHUB_SHA;
-            console.log('Would write the following records:');
-            console.log('branch', 'changeset', 'name', 'size', 'compressedSize');
-            for (const record of assetSizes) {
-                console.log(branch, changeset, record.name, record.size, record.compressedSize);
-            }
             const context = github.context;
-            console.log(JSON.stringify(context));
+            const headCommit = context.payload.head_commit;
+            const commitMessage = headCommit ? headCommit.message : '';
+            const compareUrl = context.payload.compare || '';
+            const date = headCommit
+                ? new Date(headCommit.timestamp).getTime()
+                : Date.now();
+            console.log('Would write the following records:');
+            console.log('branch', 'changeset', 'message', 'compare', 'date', 'name', 'size', 'compressedSize');
+            for (const record of assetSizes) {
+                console.log(branch, changeset, commitMessage, compareUrl, date, record.name, record.size, record.compressedSize);
+            }
             // - Grab file from S3 bucket
             // - Print out the delta (abs. and percent) using fancy formatting
             // store:
