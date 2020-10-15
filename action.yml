@@ -1,0 +1,28 @@
+name: 'Good bundle'
+description: 'Logs and compares bundle statistics'
+inputs:
+  action:
+    description: 'Which action to perform: record or compare'
+    required: true
+    default: 'record'
+  bucket:
+    description: 'The S3 bucket to upload results and stats files to'
+    required: true
+  dest:
+    description: 'The destination folder to use in the S3 bucket, if any'
+    required: false
+  region:
+    description: 'The AWS region of the S3 bucket'
+    required: true
+  awsAccessKey:
+    description: The access key used to reda/write the bucket
+    required: true
+  awsSecretAccessKey:
+    description: The access secret key used to reda/write the bucket
+    required: true
+outputs:
+  totalSize:
+    description: 'The total size of all assets in bytes'
+runs:
+  using: 'node12'
+  main: 'dist/index.js'
