@@ -23,6 +23,8 @@ inputs:
 outputs:
   totalSize:
     description: 'The total size of all assets in bytes'
+  totalCompressedSize:
+    description: 'The total compressed size of all assets in bytes'
 runs:
   using: 'node12'
   main: 'dist/index.js'

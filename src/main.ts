@@ -65,21 +65,41 @@ async function main(): Promise<void> {
     }
 
     // Measure asset sizes
+    let totalSize = 0;
+    let totalCompressedSize = 0;
     for (const [name, paths] of Object.entries(assets)) {
+      let assetTotal = 0;
+      let assetCompressedTotal = 0;
       console.log(`${name}: `);
       for (const path of paths) {
         const { size } = fs.statSync(path);
+        assetTotal += size;
+
         const compressedSize = await getCompressedSize(path);
+        assetCompressedTotal += compressedSize;
+
         console.log(
           `* ${path}: ${formatBytes(size)} (compressed: ${formatBytes(
             compressedSize
           )})`
         );
       }
-    }
 
-    // - Record totalSize (what about totalChange? totalPercentChange?)
-    //     core.setOutput("totalSize", 0);
+      // Print total for multi-part assets
+      if (paths.length > 1) {
+        console.log(
+          `  TOTAL: ${formatBytes(assetTotal)} (compressed: ${formatBytes(
+            assetCompressedTotal
+          )})`
+        );
+      }
+
+      totalSize += assetTotal;
+      totalCompressedSize += assetCompressedTotal;
+    }
+    core.setOutput('totalSize', totalSize);
+    core.setOutput('totalCompressedSize', totalCompressedSize);
+
     // - Get branch, changeset, changeset title, base revision
 
     // - Grab file from S3 bucket

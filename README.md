@@ -71,11 +71,11 @@ Inputs:
 For example:
 
 ```yaml
-name: Store bundle stats
+name: Record bundle stats
 on: [push, pull_request]
 
 jobs:
-  build:
+  report:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -87,15 +87,11 @@ jobs:
         run: yarn install
 
       - name: Build production version
-        run: NODE_ENV=production npx webpack --profile --json > stats.json
+        run: yarn build:stats
 
-  store:
-    name: Store bundle stats
-    needs: build
-    if: startsWith(github.ref, 'refs/head')
-    runs-on: ubuntu-latest
-    steps:
-      - uses: birchill/good-bundle@v1
+      - name: Record bundle stats
+        uses: birchill/good-bundle@v1
+        if: startsWith(github.ref, 'refs/head')
         with:
           action: store
           bucket: myapp-stats
@@ -104,13 +100,9 @@ jobs:
           awsAccessKey: ${{ secrets.AWS_ACCESS_KEY_ID }}
           awsSecretAccessKey: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-  compare:
-    name: Compare bundle stats
-    needs: build
-    if: startsWith(github.ref, 'refs/pull')
-    runs-on: ubuntu-latest
-    steps:
-      - uses: birchill/good-bundle@v1
+      - name: Compare bundle size
+        uses: birchill/good-bundle@v1
+        if: startsWith(github.ref, 'refs/pull')
         with:
           action: compare
           bucket: myapp-stats

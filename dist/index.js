@@ -135,16 +135,28 @@ function main() {
                 }
             }
             // Measure asset sizes
+            let totalSize = 0;
+            let totalCompressedSize = 0;
             for (const [name, paths] of Object.entries(assets)) {
+                let assetTotal = 0;
+                let assetCompressedTotal = 0;
                 console.log(`${name}: `);
                 for (const path of paths) {
                     const { size } = external_fs_.statSync(path);
+                    assetTotal += size;
                     const compressedSize = yield getCompressedSize(path);
+                    assetCompressedTotal += compressedSize;
                     console.log(`* ${path}: ${formatBytes(size)} (compressed: ${formatBytes(compressedSize)})`);
                 }
+                // Print total for multi-part assets
+                if (paths.length > 1) {
+                    console.log(`  TOTAL: ${formatBytes(assetTotal)} (compressed: ${formatBytes(assetCompressedTotal)})`);
+                }
+                totalSize += assetTotal;
+                totalCompressedSize += assetCompressedTotal;
             }
-            // - Record totalSize (what about totalChange? totalPercentChange?)
-            //     core.setOutput("totalSize", 0);
+            core.setOutput('totalSize', totalSize);
+            core.setOutput('totalCompressedSize', totalCompressedSize);
             // - Get branch, changeset, changeset title, base revision
             // - Grab file from S3 bucket
             // - Print out the delta (abs. and percent) using fancy formatting
