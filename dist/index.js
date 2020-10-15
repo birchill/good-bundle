@@ -11,8 +11,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_actions_core__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5747);
 /* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(fs__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var fast_glob__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3664);
-/* harmony import */ var fast_glob__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(fast_glob__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(5622);
+/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(path__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var fast_glob__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(3664);
+/* harmony import */ var fast_glob__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(fast_glob__WEBPACK_IMPORTED_MODULE_3__);
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -22,6 +24,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+
 
 
 
@@ -45,10 +48,10 @@ function main() {
             */
             // Find and validate config file
             const configPath = `${process.env.GITHUB_WORKSPACE}/good-bundle.config.json`;
-            if (!(0,fs__WEBPACK_IMPORTED_MODULE_1__.existsSync)(configPath)) {
+            if (!fs__WEBPACK_IMPORTED_MODULE_1__.existsSync(configPath)) {
                 throw new Error(`Could not find config file at ${configPath}`);
             }
-            const config = JSON.parse((0,fs__WEBPACK_IMPORTED_MODULE_1__.readFileSync)(configPath, { encoding: 'utf-8' }));
+            const config = JSON.parse(fs__WEBPACK_IMPORTED_MODULE_1__.readFileSync(configPath, { encoding: 'utf-8' }));
             if (!config) {
                 throw new Error('Got empty config');
             }
@@ -61,13 +64,27 @@ function main() {
                 if (typeof key !== 'string' || typeof value !== 'string' || !value) {
                     throw new Error(`Invalid asset definition: ${key}: ${value}`);
                 }
-                const entries = yield fast_glob__WEBPACK_IMPORTED_MODULE_2___default()(['.editorconfig', '**/index.js'], { dot: true });
+                const entries = yield fast_glob__WEBPACK_IMPORTED_MODULE_3___default()(['.editorconfig', '**/index.js'], { dot: true });
                 if (!entries.length) {
                     throw new Error(`Didn't find any matches for pattern ${value}`);
                 }
                 assets[key] = entries;
             }
-            // - Validate that stats file exists if specified
+            // Validate stats file
+            let statsFile;
+            if (typeof config.stats === 'string') {
+                statsFile = path__WEBPACK_IMPORTED_MODULE_2__.join(process.env.GITHUB_WORKSPACE, config.stats);
+                if (!fs__WEBPACK_IMPORTED_MODULE_1__.existsSync(statsFile)) {
+                    throw new Error(`Could not find stats file: ${statsFile}`);
+                }
+            }
+            for (const [name, paths] of Object.entries(assets)) {
+                console.log(`${name}: `);
+                for (const path of paths) {
+                    const { size } = fs__WEBPACK_IMPORTED_MODULE_1__.statSync(path);
+                    console.log(`* ${path}: ${formatBytes(size)}`);
+                }
+            }
             // - Get file size for each
             // - Brotli compress and record file size
             // - Record totalSize (what about totalChange? totalPercentChange?)
@@ -88,6 +105,16 @@ function main() {
             _actions_core__WEBPACK_IMPORTED_MODULE_0__.setFailed(error.message);
         }
     });
+}
+function formatBytes(bytes, decimals = 2) {
+    if (bytes === 0) {
+        return '0 Bytes';
+    }
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 main();
 

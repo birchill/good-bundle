@@ -1,5 +1,6 @@
 import * as core from '@actions/core';
-import { existsSync, readFileSync } from 'fs';
+import * as fs from 'fs';
+import * as path from 'path';
 import fg from 'fast-glob';
 
 async function main(): Promise<void> {
@@ -25,10 +26,12 @@ async function main(): Promise<void> {
 
     // Find and validate config file
     const configPath = `${process.env.GITHUB_WORKSPACE}/good-bundle.config.json`;
-    if (!existsSync(configPath)) {
+    if (!fs.existsSync(configPath)) {
       throw new Error(`Could not find config file at ${configPath}`);
     }
-    const config = JSON.parse(readFileSync(configPath, { encoding: 'utf-8' }));
+    const config = JSON.parse(
+      fs.readFileSync(configPath, { encoding: 'utf-8' })
+    );
     if (!config) {
       throw new Error('Got empty config');
     }
@@ -49,7 +52,22 @@ async function main(): Promise<void> {
       assets[key] = entries;
     }
 
-    // - Validate that stats file exists if specified
+    // Validate stats file
+    let statsFile: string | undefined;
+    if (typeof config.stats === 'string') {
+      statsFile = path.join(process.env.GITHUB_WORKSPACE!, config.stats);
+      if (!fs.existsSync(statsFile)) {
+        throw new Error(`Could not find stats file: ${statsFile}`);
+      }
+    }
+
+    for (const [name, paths] of Object.entries(assets)) {
+      console.log(`${name}: `);
+      for (const path of paths) {
+        const { size } = fs.statSync(path);
+        console.log(`* ${path}: ${formatBytes(size)}`);
+      }
+    }
     // - Get file size for each
     // - Brotli compress and record file size
     // - Record totalSize (what about totalChange? totalPercentChange?)
@@ -71,6 +89,20 @@ async function main(): Promise<void> {
   } catch (error) {
     core.setFailed(error.message);
   }
+}
+
+function formatBytes(bytes: number, decimals = 2): string {
+  if (bytes === 0) {
+    return '0 Bytes';
+  }
+
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
 main();
