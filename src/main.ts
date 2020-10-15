@@ -3,6 +3,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 import fg from 'fast-glob';
 
+import { getCompressedSize } from './brotli';
+import { formatBytes } from './format-bytes';
+
 async function main(): Promise<void> {
   try {
     // Validate input
@@ -61,15 +64,20 @@ async function main(): Promise<void> {
       }
     }
 
+    // Measure asset sizes
     for (const [name, paths] of Object.entries(assets)) {
       console.log(`${name}: `);
       for (const path of paths) {
         const { size } = fs.statSync(path);
-        console.log(`* ${path}: ${formatBytes(size)}`);
+        const compressedSize = await getCompressedSize(path);
+        console.log(
+          `* ${path}: ${formatBytes(size)} (compressed: ${formatBytes(
+            compressedSize
+          )})`
+        );
       }
     }
-    // - Get file size for each
-    // - Brotli compress and record file size
+
     // - Record totalSize (what about totalChange? totalPercentChange?)
     //     core.setOutput("totalSize", 0);
     // - Get branch, changeset, changeset title, base revision
@@ -89,20 +97,6 @@ async function main(): Promise<void> {
   } catch (error) {
     core.setFailed(error.message);
   }
-}
-
-function formatBytes(bytes: number, decimals = 2): string {
-  if (bytes === 0) {
-    return '0 Bytes';
-  }
-
-  const k = 1024;
-  const dm = decimals < 0 ? 0 : decimals;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
 main();

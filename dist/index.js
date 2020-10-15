@@ -2,19 +2,36 @@ require('./sourcemap-register.js');module.exports =
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 3109:
+/***/ 7945:
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
+// ESM COMPAT FLAG
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2186);
-/* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_actions_core__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5747);
-/* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(fs__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(5622);
-/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(path__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var fast_glob__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(3664);
-/* harmony import */ var fast_glob__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(fast_glob__WEBPACK_IMPORTED_MODULE_3__);
+
+// EXTERNAL MODULE: external "stream"
+var external_stream_ = __webpack_require__(2413);
+
+// EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
+var core = __webpack_require__(2186);
+
+// EXTERNAL MODULE: external "fs"
+var external_fs_ = __webpack_require__(5747);
+
+// EXTERNAL MODULE: external "util"
+var external_util_ = __webpack_require__(1669);
+
+// EXTERNAL MODULE: external "path"
+var external_path_ = __webpack_require__(5622);
+
+// EXTERNAL MODULE: external "zlib"
+var external_zlib_ = __webpack_require__(8761);
+
+// EXTERNAL MODULE: ./node_modules/fast-glob/out/index.js
+var out = __webpack_require__(3664);
+var out_default = /*#__PURE__*/__webpack_require__.n(out);
+
+// CONCATENATED MODULE: ./lib/brotli.js
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -28,11 +45,50 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 
 
-function main() {
+const pipeline = (0,external_util_.promisify)(external_stream_.pipeline);
+function getCompressedSize(path) {
     return __awaiter(this, void 0, void 0, function* () {
+        const outPath = path + '.br';
+        yield pipeline((0,external_fs_.createReadStream)(path), (0,external_zlib_.createBrotliCompress)(), (0,external_fs_.createWriteStream)(outPath));
+        const { size } = (0,external_fs_.statSync)(outPath);
+        (0,external_fs_.unlinkSync)(outPath);
+        return size;
+    });
+}
+
+// CONCATENATED MODULE: ./lib/format-bytes.js
+function formatBytes(bytes, decimals = 2) {
+    if (bytes === 0) {
+        return '0 Bytes';
+    }
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+}
+
+// CONCATENATED MODULE: ./lib/main.js
+var main_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+
+
+
+
+
+
+function main() {
+    return main_awaiter(this, void 0, void 0, function* () {
         try {
             // Validate input
-            const action = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('action', { required: true });
+            const action = core.getInput('action', { required: true });
             if (action !== 'store' && action !== 'compare') {
                 throw new Error(`Unrecognized action "${action}". Only "store" and "compare" are recognized.`);
             }
@@ -48,10 +104,10 @@ function main() {
             */
             // Find and validate config file
             const configPath = `${process.env.GITHUB_WORKSPACE}/good-bundle.config.json`;
-            if (!fs__WEBPACK_IMPORTED_MODULE_1__.existsSync(configPath)) {
+            if (!external_fs_.existsSync(configPath)) {
                 throw new Error(`Could not find config file at ${configPath}`);
             }
-            const config = JSON.parse(fs__WEBPACK_IMPORTED_MODULE_1__.readFileSync(configPath, { encoding: 'utf-8' }));
+            const config = JSON.parse(external_fs_.readFileSync(configPath, { encoding: 'utf-8' }));
             if (!config) {
                 throw new Error('Got empty config');
             }
@@ -64,7 +120,7 @@ function main() {
                 if (typeof key !== 'string' || typeof value !== 'string' || !value) {
                     throw new Error(`Invalid asset definition: ${key}: ${value}`);
                 }
-                const entries = yield fast_glob__WEBPACK_IMPORTED_MODULE_3___default()(value, { dot: true });
+                const entries = yield (0,out_default())(value, { dot: true });
                 if (!entries.length) {
                     throw new Error(`Didn't find any matches for pattern ${value}`);
                 }
@@ -73,20 +129,20 @@ function main() {
             // Validate stats file
             let statsFile;
             if (typeof config.stats === 'string') {
-                statsFile = path__WEBPACK_IMPORTED_MODULE_2__.join(process.env.GITHUB_WORKSPACE, config.stats);
-                if (!fs__WEBPACK_IMPORTED_MODULE_1__.existsSync(statsFile)) {
+                statsFile = external_path_.join(process.env.GITHUB_WORKSPACE, config.stats);
+                if (!external_fs_.existsSync(statsFile)) {
                     throw new Error(`Could not find stats file: ${statsFile}`);
                 }
             }
+            // Measure asset sizes
             for (const [name, paths] of Object.entries(assets)) {
                 console.log(`${name}: `);
                 for (const path of paths) {
-                    const { size } = fs__WEBPACK_IMPORTED_MODULE_1__.statSync(path);
-                    console.log(`* ${path}: ${formatBytes(size)}`);
+                    const { size } = external_fs_.statSync(path);
+                    const compressedSize = yield getCompressedSize(path);
+                    console.log(`* ${path}: ${formatBytes(size)} (compressed: ${formatBytes(compressedSize)})`);
                 }
             }
-            // - Get file size for each
-            // - Brotli compress and record file size
             // - Record totalSize (what about totalChange? totalPercentChange?)
             //     core.setOutput("totalSize", 0);
             // - Get branch, changeset, changeset title, base revision
@@ -102,19 +158,9 @@ function main() {
             // - Add a build status summary?
         }
         catch (error) {
-            _actions_core__WEBPACK_IMPORTED_MODULE_0__.setFailed(error.message);
+            core.setFailed(error.message);
         }
     });
-}
-function formatBytes(bytes, decimals = 2) {
-    if (bytes === 0) {
-        return '0 Bytes';
-    }
-    const k = 1024;
-    const dm = decimals < 0 ? 0 : decimals;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 main();
 
@@ -7201,6 +7247,14 @@ module.exports = require("stream");
 "use strict";
 module.exports = require("util");
 
+/***/ }),
+
+/***/ 8761:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("zlib");
+
 /***/ })
 
 /******/ 	});
@@ -7281,7 +7335,7 @@ module.exports = require("util");
 /******/ 	// module exports must be returned from runtime so entry inlining is disabled
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(3109);
+/******/ 	return __webpack_require__(7945);
 /******/ })()
 ;
 //# sourceMappingURL=index.js.map
