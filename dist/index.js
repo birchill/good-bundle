@@ -44,7 +44,9 @@ function main() {
             });
             */
             // Find and validate config file
-            const configPath = `${process.env.HOME}/good-bundle.config.json`;
+            console.log('This is definitely the latest version');
+            console.log(`GITHUB_WORKSPACE: ${process.env.GITHUB_WORKSPACE}`);
+            const configPath = `${process.env.GITHUB_WORKSPACE}/good-bundle.config.json`;
             if (!(0,fs__WEBPACK_IMPORTED_MODULE_1__.existsSync)(configPath)) {
                 throw new Error(`Could not find config file at ${configPath}`);
             }
