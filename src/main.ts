@@ -131,7 +131,7 @@ async function main(): Promise<void> {
     if (dest) {
       key = `${dest}/${key}`;
     }
-    const currentFile = getS3File({
+    const currentFile = await getS3File({
       bucket,
       key,
       region,
