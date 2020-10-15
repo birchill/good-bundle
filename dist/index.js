@@ -44,8 +44,6 @@ function main() {
             });
             */
             // Find and validate config file
-            console.log('This is definitely the latest version');
-            console.log(`GITHUB_WORKSPACE: ${process.env.GITHUB_WORKSPACE}`);
             const configPath = `${process.env.GITHUB_WORKSPACE}/good-bundle.config.json`;
             if (!(0,fs__WEBPACK_IMPORTED_MODULE_1__.existsSync)(configPath)) {
                 throw new Error(`Could not find config file at ${configPath}`);
@@ -59,7 +57,7 @@ function main() {
                 throw new Error('Missing assets key in configuration');
             }
             const assets = config.assets;
-            for (const [key, value] of config.assets.entries()) {
+            for (const [key, value] of Object.entries(config.assets)) {
                 if (typeof key !== 'string' || typeof value !== 'string' || !value) {
                     throw new Error(`Invalid asset definition: ${key}: ${value}`);
                 }
