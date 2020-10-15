@@ -81,7 +81,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2.1.2
         with:
-          node-version: "12.x"
+          node-version: '12.x'
 
       - name: yarn install
         run: yarn install
@@ -90,30 +90,34 @@ jobs:
         run: NODE_ENV=production npx webpack --profile --json > stats.json
 
   store:
-    - name: Store bundle stats
-      needs: build
-      if: startsWith(github.ref, 'refs/head')
-      uses: birchill/good-bundle@master
-      with:
-        action: store
-        bucket: myapp-stats
-        dest: bundle-stats
-        region: ap-northeast-1
-        awsAccessKey: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        awsSecretAccessKey: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    name: Store bundle stats
+    needs: build
+    if: startsWith(github.ref, 'refs/head')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: birchill/good-bundle@v1
+        with:
+          action: store
+          bucket: myapp-stats
+          dest: bundle-stats
+          region: ap-northeast-1
+          awsAccessKey: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          awsSecretAccessKey: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
   compare:
-    - name: Compare bundle stats
-      needs: build
-      if: startsWith(github.ref, 'refs/pull')
-      uses: birchill/good-bundle@master
-      with:
-        action: compare
-        bucket: myapp-stats
-        dest: bundle-stats
-        region: ap-northeast-1
-        awsAccessKey: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        awsSecretAccessKey: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    name: Compare bundle stats
+    needs: build
+    if: startsWith(github.ref, 'refs/pull')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: birchill/good-bundle@v1
+        with:
+          action: compare
+          bucket: myapp-stats
+          dest: bundle-stats
+          region: ap-northeast-1
+          awsAccessKey: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          awsSecretAccessKey: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 ```
 
 You can set the secret environment variables as follows:
