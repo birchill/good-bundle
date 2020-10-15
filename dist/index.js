@@ -2,7 +2,7 @@ require('./sourcemap-register.js');module.exports =
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 7945:
+/***/ 6200:
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -56,7 +56,7 @@ function getCompressedSize(path) {
     });
 }
 
-// CONCATENATED MODULE: ./lib/format-bytes.js
+// CONCATENATED MODULE: ./lib/format.js
 function formatBytes(bytes, decimals = 2) {
     if (bytes === 0) {
         return '0 Bytes';
@@ -7347,7 +7347,7 @@ module.exports = require("zlib");
 /******/ 	// module exports must be returned from runtime so entry inlining is disabled
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(7945);
+/******/ 	return __webpack_require__(6200);
 /******/ })()
 ;
 //# sourceMappingURL=index.js.map

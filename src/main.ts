@@ -4,7 +4,7 @@ import * as path from 'path';
 import fg from 'fast-glob';
 
 import { getCompressedSize } from './brotli';
-import { formatBytes } from './format-bytes';
+import { formatBytes } from './format';
 
 async function main(): Promise<void> {
   try {
