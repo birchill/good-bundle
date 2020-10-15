@@ -2,7 +2,7 @@ require('./sourcemap-register.js');module.exports =
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 128:
+/***/ 4346:
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -56,6 +56,26 @@ function getBranch() {
     console.log(`  GITHUB_HEAD_REF: ${process.env.GITHUB_HEAD_REF}`);
     console.log(`  GITHUB_BASE_REF: ${process.env.GITHUB_BASE_REF}`);
     return '';
+}
+
+// CONCATENATED MODULE: ./lib/csv.js
+function serializeCsv(input) {
+    let result = '';
+    for (const item of input) {
+        if (result) {
+            result += ',';
+        }
+        if (typeof item === 'number') {
+            result += item;
+        }
+        else if (item.includes('"') || item.includes(',')) {
+            result += `"${item.replace(/"/g, '""')}"`;
+        }
+        else {
+            result += item;
+        }
+    }
+    return result;
 }
 
 // CONCATENATED MODULE: ./lib/brotli.js
@@ -166,6 +186,7 @@ var main_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arg
 
 
 
+
 function main() {
     return main_awaiter(this, void 0, void 0, function* () {
         try {
@@ -236,9 +257,27 @@ function main() {
                 ? new Date(headCommit.timestamp).getTime()
                 : Date.now();
             console.log('Would write the following records:');
-            console.log('branch', 'changeset', 'message', 'compare', 'date', 'name', 'size', 'compressedSize');
+            console.log(serializeCsv([
+                'branch',
+                'changeset',
+                'message',
+                'compare',
+                'date',
+                'name',
+                'size',
+                'compressedSize',
+            ]));
             for (const record of assetSizes) {
-                console.log(branch, changeset, commitMessage, compareUrl, date, record.name, record.size, record.compressedSize);
+                console.log(serializeCsv([
+                    branch,
+                    changeset,
+                    commitMessage,
+                    compareUrl,
+                    date,
+                    record.name,
+                    record.size,
+                    record.compressedSize,
+                ]));
             }
             // - Grab file from S3 bucket
             // - Print out the delta (abs. and percent) using fancy formatting
@@ -12880,7 +12919,7 @@ module.exports = require("zlib");
 /******/ 	// module exports must be returned from runtime so entry inlining is disabled
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(128);
+/******/ 	return __webpack_require__(4346);
 /******/ })()
 ;
 //# sourceMappingURL=index.js.map

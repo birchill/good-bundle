@@ -5,6 +5,7 @@ import * as path from 'path';
 import fg from 'fast-glob';
 
 import { getBranch } from './branch';
+import { serializeCsv } from './csv';
 import { groupAssetRecordsByName, measureAssetSizes } from './measure';
 
 async function main(): Promise<void> {
@@ -94,25 +95,29 @@ async function main(): Promise<void> {
 
     console.log('Would write the following records:');
     console.log(
-      'branch',
-      'changeset',
-      'message',
-      'compare',
-      'date',
-      'name',
-      'size',
-      'compressedSize'
+      serializeCsv([
+        'branch',
+        'changeset',
+        'message',
+        'compare',
+        'date',
+        'name',
+        'size',
+        'compressedSize',
+      ])
     );
     for (const record of assetSizes) {
       console.log(
-        branch,
-        changeset,
-        commitMessage,
-        compareUrl,
-        date,
-        record.name,
-        record.size,
-        record.compressedSize
+        serializeCsv([
+          branch,
+          changeset,
+          commitMessage,
+          compareUrl,
+          date,
+          record.name,
+          record.size,
+          record.compressedSize,
+        ])
       );
     }
 
