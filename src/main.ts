@@ -7,10 +7,14 @@ import fg from 'fast-glob';
 import { getBranch } from './branch';
 import { serializeCsv } from './csv';
 import { groupAssetRecordsByName, measureAssetSizes } from './measure';
+import { getS3File } from './s3';
 
 async function main(): Promise<void> {
   try {
     // Validate input
+    //
+    // TODO: Drop this and just make the action itself detect if this is a PR
+    // or not, and only store results if it's a push.
     const action = core.getInput('action', { required: true });
     if (action !== 'store' && action !== 'compare') {
       throw new Error(
@@ -19,7 +23,6 @@ async function main(): Promise<void> {
     }
 
     // Get bucket parameters
-    /*
     const bucket = core.getInput('bucket', { required: true });
     const dest = core.getInput('dest');
     const region = core.getInput('region', { required: true });
@@ -27,7 +30,6 @@ async function main(): Promise<void> {
     const awsSecretAccessKey = core.getInput('awsSecretAccessKey', {
       required: true,
     });
-    */
 
     // Find and validate config file
     const configPath = `${process.env.GITHUB_WORKSPACE}/good-bundle.config.json`;
@@ -121,8 +123,22 @@ async function main(): Promise<void> {
       );
     }
 
-    // - Grab file from S3 bucket
-    // - Print out the delta (abs. and percent) using fancy formatting
+    // Get file from S3 bucket
+    let key = 'bundle-stats.csv';
+    if (dest) {
+      key = `${dest}/${key}`;
+    }
+    const currentFile = getS3File({
+      bucket,
+      key,
+      region,
+      accessKey: awsAccessKey,
+      secretAccessKey: awsSecretAccessKey,
+    });
+    console.log(`currentFile: ${currentFile}`);
+
+    // Look up the record for the base changeset
+    // Print out the delta (abs. and percent) using fancy formatting
 
     // store:
     // - Upload the stats file (rename to <changesetId>-stats.json)
