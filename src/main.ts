@@ -1,10 +1,11 @@
 import * as core from '@actions/core';
+import * as github from '@actions/github';
 import * as fs from 'fs';
 import * as path from 'path';
 import fg from 'fast-glob';
 
-import { getCompressedSize } from './brotli';
-import { formatBytes } from './format';
+import { getBranch } from './branch';
+import { groupAssetRecordsByName, measureAssetSizes } from './measure';
 
 async function main(): Promise<void> {
   try {
@@ -65,42 +66,38 @@ async function main(): Promise<void> {
     }
 
     // Measure asset sizes
-    let totalSize = 0;
-    let totalCompressedSize = 0;
-    for (const [name, paths] of Object.entries(assets)) {
-      let assetTotal = 0;
-      let assetCompressedTotal = 0;
-      console.log(`${name}: `);
-      for (const path of paths) {
-        const { size } = fs.statSync(path);
-        assetTotal += size;
+    const assetSizes = groupAssetRecordsByName(await measureAssetSizes(assets));
 
-        const compressedSize = await getCompressedSize(path);
-        assetCompressedTotal += compressedSize;
-
-        console.log(
-          `* ${path}: ${formatBytes(size)} (compressed: ${formatBytes(
-            compressedSize
-          )})`
-        );
-      }
-
-      // Print total for multi-part assets
-      if (paths.length > 1) {
-        console.log(
-          `  TOTAL: ${formatBytes(assetTotal)} (compressed: ${formatBytes(
-            assetCompressedTotal
-          )})`
-        );
-      }
-
-      totalSize += assetTotal;
-      totalCompressedSize += assetCompressedTotal;
-    }
+    // Output total size
+    const [totalSize, totalCompressedSize] = assetSizes.reduce(
+      ([size, compressedSize], record) => [
+        size + record.size,
+        compressedSize + record.compressedSize,
+      ],
+      [0, 0]
+    );
     core.setOutput('totalSize', totalSize);
     core.setOutput('totalCompressedSize', totalCompressedSize);
 
-    // - Get branch, changeset, changeset title, base revision
+    // Get branch, changeset, changeset title, base revision
+
+    const branch = getBranch();
+    const changeset = process.env.GITHUB_SHA;
+
+    console.log('Would write the following records:');
+    console.log('branch', 'changeset', 'name', 'size', 'compressedSize');
+    for (const record of assetSizes) {
+      console.log(
+        branch,
+        changeset,
+        record.name,
+        record.size,
+        record.compressedSize
+      );
+    }
+
+    const context = github.context;
+    console.log(JSON.stringify(context));
 
     // - Grab file from S3 bucket
     // - Print out the delta (abs. and percent) using fancy formatting

@@ -1,0 +1,28 @@
+export function getBranch(): string {
+  const githubRef = process.env.GITHUB_REF;
+  if (!githubRef) {
+    return '';
+  }
+
+  // Pushes generally have refs/heads/<branch>
+  if (githubRef.startsWith('refs/heads/')) {
+    return githubRef.slice('refs/heads/'.length);
+  }
+
+  // Pull requests will normally look like refs/pulls/17/merge etc. but
+  // will set the GITHUB_HEAD_REF environment variable.
+  if (
+    githubRef.startsWith('refs/pulls') &&
+    process.env.GITHUB_HEAD_REF &&
+    process.env.GITHUB_HEAD_REF.startsWith('refs/heads/')
+  ) {
+    return process.env.GITHUB_HEAD_REF.slice('refs/heads/'.length);
+  }
+
+  console.log('Failed to find branch name');
+  console.log(`  GITHUB_REF: ${githubRef}`);
+  console.log(`  GITHUB_HEAD_REF: ${process.env.GITHUB_HEAD_REF}`);
+  console.log(`  GITHUB_BASE_REF: ${process.env.GITHUB_BASE_REF}`);
+
+  return '';
+}
