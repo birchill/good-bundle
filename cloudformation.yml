@@ -25,12 +25,15 @@ Resources:
           Statement:
           - Effect: Allow
             Action:
+            - s3:ListBucket
+            Resource:
+            - !GetAtt BundleStatsBucket.Arn
+          - Effect: Allow
+            Action:
             - s3:GetObject
-            - s3:GetObjectAcl
             - s3:PutObject
             - s3:PutObjectAcl
             Resource:
-            - !GetAtt BundleStatsBucket.Arn
             - !Sub "arn:aws:s3:::${BundleStatsBucket}/*"
 
   AccessKey:

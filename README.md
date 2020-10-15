@@ -25,6 +25,11 @@ Fetch the generated bucket name and AWS access keys. You'll need them in step 3.
 aws cloudformation describe-stacks --stack-name bundlesize-stack
 ```
 
+Note that the user credentials need to have `s3:ListBucket` privileges for the
+bucket itself (see the CloudFormation template for an example). This is need
+when fetching non-existent files. Without that privilege S3 will return an
+Access Denied error which this action will fail to treat as "Not Found".
+
 ### 2. Create a configuration file
 
 Create a configuration file in the root of your project named `good-bundle.config.json`.
