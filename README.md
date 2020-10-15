@@ -11,8 +11,18 @@ Statistics gathered for each configured asset:
 
 ### 1. Set up an S3 bucket and IAM user
 
-```yaml
+See the included `cloudformation.yml` file for an example configuration.
 
+e.g.
+
+```console
+aws cloudformation deploy --stack-name bundlesize-stack --template-file cloudformation.yml --capabilities CAPABILITY_IAM --region ap-northeast-1
+```
+
+Fetch the generated bucket name and AWS access keys. You'll need them in step 3.
+
+```console
+aws cloudformation describe-stacks --stack-name bundlesize-stack
 ```
 
 ### 2. Create a configuration file

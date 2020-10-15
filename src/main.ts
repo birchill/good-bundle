@@ -90,6 +90,7 @@ async function main(): Promise<void> {
     const context = github.context;
     const headCommit = context.payload.head_commit;
     const commitMessage = headCommit ? headCommit.message : '';
+    const before = context.payload.before;
     const compareUrl = context.payload.compare || '';
     const date = headCommit
       ? new Date(headCommit.timestamp).getTime()
@@ -101,6 +102,7 @@ async function main(): Promise<void> {
         'branch',
         'changeset',
         'message',
+        'before',
         'compare',
         'date',
         'name',
@@ -114,6 +116,7 @@ async function main(): Promise<void> {
           branch,
           changeset,
           commitMessage,
+          before,
           compareUrl,
           date,
           record.name,

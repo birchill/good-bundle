@@ -1,0 +1,51 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Bucket for storing bundle information allow with a user to access it
+
+Resources:
+  BundleStatsBucket:
+    Type: AWS::S3::Bucket
+    UpdateReplacePolicy: Retain
+    Properties:
+      AccessControl: Private
+      CorsConfiguration:
+        CorsRules:
+        - AllowedHeaders: ['*']
+          AllowedMethods: [GET, HEAD]
+          AllowedOrigins: ['*']
+          ExposedHeaders: [Content-Length, Content-Encoding]
+      VersioningConfiguration:
+        Status: Enabled
+
+  BucketUser:
+    Type: AWS::IAM::User
+    Properties:
+      Policies:
+      - PolicyName: ReadWriteAccessToBucket
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - s3:GetObject
+            - s3:PutObject
+            - s3:PutObjectAcl
+            Resource: !GetAtt BundleStatsBucket.Arn
+
+  AccessKey:
+    Type: AWS::IAM::AccessKey
+    Properties:
+      Status: Active
+      UserName: !Ref BucketUser
+
+Outputs:
+  BucketName:
+    Description: "Bucket name"
+    Value: !Ref BundleStatsBucket
+
+  AccessKey:
+    Description: "Access key for bucket reader/writer"
+    Value: !Ref AccessKey
+
+  SecretAccessKey:
+    Description: "Secret access key for bucket reader/writer"
+    Value: !GetAtt AccessKey.SecretAccessKey
