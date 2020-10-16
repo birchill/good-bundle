@@ -19,8 +19,11 @@ export async function storeAndGetPreviousSizes(
   // Look up the record for the base changeset while writing the contents
   // to a file.
   try {
+    console.log('Got to the cloning part');
     const stream = cloneable(logStream);
+    console.log('Setting up the promise');
     const getPreviousSizes = new Promise<AssetSizes>((resolve, reject) => {
+      console.log('Inside the promise');
       const result: AssetSizes = {};
       stream
         .clone()
@@ -39,10 +42,14 @@ export async function storeAndGetPreviousSizes(
             };
           }
         })
-        .on('end', () => resolve(result));
+        .on('end', () => {
+          console.log('Done waiting');
+          resolve(result);
+        });
     });
 
     try {
+      console.log('Waiting on the pipeline');
       await pipeline(stream, fs.createWriteStream(destFile));
     } catch (e) {
       console.log('Encountered error in pipeline');
@@ -52,6 +59,7 @@ export async function storeAndGetPreviousSizes(
       }
     }
 
+    console.log('Waiting on the promise');
     return await getPreviousSizes;
   } catch (e) {
     console.log('Got an error thrown from somewhere else?');
