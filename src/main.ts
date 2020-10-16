@@ -7,7 +7,11 @@ import * as path from 'path';
 import { getBranch } from './branch';
 import { commentOnPr } from './comment';
 import { serializeCsv } from './csv';
-import { AssetSizes, storeAndGetPreviousSizes } from './history';
+import {
+  AssetSizes,
+  getBaseRevision,
+  storeAndGetPreviousSizes,
+} from './history';
 import { logSizes } from './log';
 import { getManifest } from './manifest';
 import {
@@ -98,9 +102,11 @@ async function main(): Promise<void> {
 
     // Get existing sizes
     const logFilename = path.join(__dirname, 'bundle-stats-001.csv');
+    const baseRevision = await getBaseRevision();
     let previousSizes = await storeAndGetPreviousSizes(
       existingLog,
-      logFilename
+      logFilename,
+      baseRevision
     );
 
     // Print different to console
@@ -118,7 +124,8 @@ async function main(): Promise<void> {
         previousSizes,
         logKey,
         assetSizes,
-        logFilename: logFilename,
+        logFilename,
+        baseRevision,
       });
     }
 
@@ -149,6 +156,7 @@ async function uploadResults({
   logFilename,
   assetSizes,
   previousSizes,
+  baseRevision,
 }: {
   statsFile: string | undefined;
   bucket: string;
@@ -158,6 +166,7 @@ async function uploadResults({
   logFilename: string;
   assetSizes: Array<AssetSummaryRecord>;
   previousSizes: AssetSizes | null;
+  baseRevision: string;
 }) {
   // Get push metadata
   const branch = getBranch();
@@ -169,7 +178,6 @@ async function uploadResults({
   const commitMessage = headCommit
     ? headCommit.message.split(/\r\n|\r|\n/)[0]
     : '';
-  const before = context.payload.before;
   const compareUrl = context.payload.compare || '';
   const date = headCommit
     ? new Date(headCommit.timestamp).getTime()
@@ -219,7 +227,7 @@ async function uploadResults({
           branch,
           changeset,
           commitMessage,
-          before,
+          baseRevision,
           compareUrl,
           date,
           record.name,
@@ -236,7 +244,7 @@ async function uploadResults({
       'branch',
       'changeset',
       'message',
-      'before',
+      'baseRevision',
       'compare',
       'date',
       'name',

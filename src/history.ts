@@ -14,17 +14,9 @@ export type AssetSizes = {
 
 export async function storeAndGetPreviousSizes(
   logStream: Readable,
-  destFile: string
+  destFile: string,
+  baseRevision: string
 ): Promise<AssetSizes | null> {
-  // If this is a push event we should use the before changeset.
-  let baseRevision = github.context.payload.before;
-
-  // For a pull request, however, we should use the latest commit from the
-  // target branch.
-  if (github.context.payload.pull_request) {
-    baseRevision = await getBranchHeadRev(process.env.GITHUB_BASE_REF!);
-  }
-
   // Look up the record for the base changeset while writing the contents
   // to a file.
   const stream = cloneable(logStream);
@@ -64,27 +56,30 @@ export async function storeAndGetPreviousSizes(
   return await getPreviousSizes;
 }
 
+export async function getBaseRevision(): Promise<string> {
+  // For a pull request, however, we should use the latest commit from the
+  // target branch.
+  if (github.context.payload.pull_request) {
+    return getBranchHeadRev(process.env.GITHUB_BASE_REF!);
+  } else {
+    return github.context.payload.before;
+  }
+}
+
 async function getBranchHeadRev(branch: string): Promise<string> {
   let result: string = '';
-  let error: string = '';
   const options: ExecOptions = {
     cwd: process.env.GITHUB_WORKSPACE,
     listeners: {
       stdout: (data: Buffer) => {
         result += data.toString();
       },
-      stderr: (data: Buffer) => {
-        error = data.toString();
-        console.error(`Got error: ${error}`);
-      },
     },
+    silent: true,
+    failOnStdErr: true,
   };
 
   await exec(`git rev-parse ${branch}`, [], options);
-
-  if (error) {
-    throw new Error(error);
-  }
 
   return result.trim();
 }
