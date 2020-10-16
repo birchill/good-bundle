@@ -100,8 +100,7 @@ async function main(): Promise<void> {
     const logFilename = path.join(__dirname, 'bundle-stats-001.csv');
     let previousSizes = await storeAndGetPreviousSizes(
       existingLog,
-      logFilename,
-      github.context.payload.before
+      logFilename
     );
 
     // Print different to console

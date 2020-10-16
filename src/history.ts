@@ -1,8 +1,12 @@
+import * as github from '@actions/github';
+import { ExecOptions, exec } from '@actions/exec';
 import cloneable from 'cloneable-readable';
 import { parse as csvParse } from '@fast-csv/parse';
 import * as fs from 'fs';
 import { pipeline as callbackPipeline, Readable } from 'stream';
 import { promisify } from 'util';
+
+import { getBranch } from './branch';
 
 const pipeline = promisify(callbackPipeline);
 
@@ -12,9 +16,17 @@ export type AssetSizes = {
 
 export async function storeAndGetPreviousSizes(
   logStream: Readable,
-  destFile: string,
-  baseRevision: string
+  destFile: string
 ): Promise<AssetSizes | null> {
+  // If this is a push event we should use the before changeset.
+  let baseRevision = github.context.payload.before;
+
+  // For a pull request, however, we should use the latest commit from the
+  // target branch.
+  if (github.context.payload.pull_request) {
+    baseRevision = getBranchHeadRev(getBranch());
+  }
+
   // Look up the record for the base changeset while writing the contents
   // to a file.
   const stream = cloneable(logStream);
@@ -54,4 +66,24 @@ export async function storeAndGetPreviousSizes(
   }
 
   return await getPreviousSizes;
+}
+
+async function getBranchHeadRev(branch: string): Promise<string> {
+  let result: string = '';
+  const options: ExecOptions = {
+    cwd: process.env.GITHUB_WORKSPACE,
+    listeners: {
+      stdout: (data: Buffer) => {
+        console.log(`Got data: ${data.toString()}`);
+        result += data.toString();
+      },
+      stderr: (data: Buffer) => {
+        console.log(`Got error: ${data.toString()}`);
+      },
+    },
+  };
+
+  await exec(`git rev-parse ${branch}`, [], options);
+
+  return result.trim();
 }

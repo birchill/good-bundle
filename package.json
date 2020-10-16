@@ -8,6 +8,7 @@
   "license": "MIT",
   "dependencies": {
     "@actions/core": "^1.2.6",
+    "@actions/exec": "^1.0.4",
     "@actions/github": "^4.0.0",
     "@fast-csv/parse": "^4.3.2",
     "aws-sdk": "^2.771.0",
@@ -22,7 +23,6 @@
     "typescript": "^4.0.3"
   },
   "scripts": {
-    "postinstall": "husky install",
     "build": "tsc",
     "format": "prettier --write **/*.ts",
     "format-check": "prettier --check **/*.ts",
