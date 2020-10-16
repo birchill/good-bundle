@@ -65,7 +65,11 @@ async function main(): Promise<void> {
     const changeset = process.env.GITHUB_SHA;
     const context = github.context;
     const headCommit = context.payload.head_commit;
-    const commitMessage = headCommit ? headCommit.message : '';
+    // We only take the first line of the commit message because many tools
+    // (e.g. Google Data Portal) can't process CSV files with line breaks.
+    const commitMessage = headCommit
+      ? headCommit.message.split(/\r\n|\r|\n/)[0]
+      : '';
     const before = context.payload.before;
     const compareUrl = context.payload.compare || '';
     const date = headCommit
