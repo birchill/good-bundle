@@ -1,6 +1,4 @@
-import * as fs from 'fs';
-
-type Manifest = {
+export type Manifest = {
   fileLocations: Array<{ URIs?: Array<string>; URIPrefixes?: Array<string> }>;
   globalUploadSettings?: {
     format?: 'CSV' | 'TSV' | 'CLF' | 'ELF' | 'JSON'; // Default CSV
@@ -21,21 +19,17 @@ type Manifest = {
 // But if your QuickSight account is in another region you need to use one
 // of the formats that includes the region name so to be same we use that.
 
-export async function writeManifest({
+export function getManifest({
   keys,
   bucket,
   region,
-  destFile,
 }: {
   keys: Array<string>;
   bucket: string;
   region: string;
-  destFile: string;
-}) {
+}): Manifest {
   const URIs = keys.map(
     (key) => `https://${bucket}.s3-${region}.amazonaws.com/${key}`
   );
-  const manifest: Manifest = { fileLocations: [{ URIs }] };
-  const contents = JSON.stringify(manifest);
-  fs.writeFileSync(destFile, contents);
+  return { fileLocations: [{ URIs }] };
 }

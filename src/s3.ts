@@ -31,23 +31,44 @@ export async function getS3Stream({
   return request.createReadStream();
 }
 
-export async function uploadFileToS3({
+export async function uploadFileToS3(params: {
+  bucket: string;
+  key: string;
+  s3: AWS.S3;
+  filePath: string;
+  contentType: string;
+  immutable?: boolean;
+}) {
+  const content = fs.createReadStream(params.filePath);
+  return _uploadToS3({ ...params, content });
+}
+
+export async function uploadToS3(params: {
+  bucket: string;
+  key: string;
+  s3: AWS.S3;
+  content: string;
+  contentType: string;
+  immutable?: boolean;
+}) {
+  return _uploadToS3(params);
+}
+
+async function _uploadToS3({
   bucket,
   key,
   s3,
-  sourcePath,
+  content,
   contentType,
   immutable = false,
 }: {
   bucket: string;
   key: string;
   s3: AWS.S3;
-  sourcePath: string;
+  content: string | Readable;
   contentType: string;
   immutable?: boolean;
 }) {
-  const Body = fs.createReadStream(sourcePath);
-
   const CacheControl = immutable
     ? 'public, max-age=31536000'
     : 'no-cache, max-age=0';
@@ -55,7 +76,7 @@ export async function uploadFileToS3({
   const params: S3.Types.PutObjectRequest = {
     Bucket: bucket,
     Key: key,
-    Body,
+    Body: content,
     ACL: 'public-read',
     ContentType: contentType,
     CacheControl,

@@ -8,9 +8,9 @@ import { getBranch } from './branch';
 import { serializeCsv } from './csv';
 import { storeAndGetPreviousSizes } from './history';
 import { logSizes } from './log';
-import { writeManifest } from './manifest';
+import { getManifest } from './manifest';
 import { groupAssetRecordsByName, measureAssetSizes } from './measure';
-import { getS3Instance, getS3Stream, uploadFileToS3 } from './s3';
+import { getS3Instance, getS3Stream, uploadToS3 } from './s3';
 
 async function main(): Promise<void> {
   try {
@@ -164,18 +164,17 @@ async function main(): Promise<void> {
       fs.writeFileSync(targetFile, contents);
 
       // Generate a manifest file
-      const manifestFile = path.join(__dirname, 'quicksight_manifest.json');
-      writeManifest({
-        keys: [key],
+      await uploadToS3({
         bucket,
-        region,
-        destFile: manifestFile,
-      });
-      await uploadFileToS3({
-        bucket,
-        key: toKey('quicksigh_manifest.json'),
+        key: toKey('quicksight_manifest.json'),
         s3,
-        sourcePath: manifestFile,
+        content: JSON.stringify(
+          getManifest({
+            keys: [key],
+            bucket,
+            region,
+          })
+        ),
         contentType: 'application/json',
       });
     }
