@@ -5,6 +5,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 import { getBranch } from './branch';
+import { commentOnPr } from './comment';
 import { serializeCsv } from './csv';
 import { storeAndGetPreviousSizes } from './history';
 import { logSizes } from './log';
@@ -209,7 +210,8 @@ async function main(): Promise<void> {
       contentType: 'text/csv',
     });
 
-    // TODO: If this is a PR, create a comment on the PR
+    // If this is a PR, create a comment on the PR
+    await commentOnPr(assetSizes, previousSizes || {});
 
     core.info('Done.');
   } catch (error) {

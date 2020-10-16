@@ -92,7 +92,7 @@ For example:
 
 ```yaml
 name: Record bundle stats
-on: [push, pull_request]
+on: [push, pull_request_target]
 
 jobs:
   report:
@@ -117,6 +117,7 @@ jobs:
           region: us-west-2
           awsAccessKey: ${{ secrets.AWS_ACCESS_KEY_ID }}
           awsSecretAccessKey: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 You can set the secret environment variables as follows:

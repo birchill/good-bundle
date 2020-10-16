@@ -16,6 +16,9 @@ inputs:
   awsSecretAccessKey:
     description: The access secret key used to read/write the bucket
     required: true
+  repo-token:
+    description: 'The GITHUB_TOKEN secret. Required in order to comment on pull requests'
+    required: false
 outputs:
   totalSize:
     description: 'The total size of all assets in bytes'
