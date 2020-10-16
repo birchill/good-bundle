@@ -23,7 +23,11 @@ export async function storeAndGetPreviousSizes(
     stream
       .clone()
       .pipe(csvParse({ headers: true }))
-      .on('error', reject)
+      .on('error', (err) => {
+        console.log('Encountered error in CSV parsing stream');
+        console.log(err);
+        reject(err);
+      })
       .on('data', (row) => {
         console.log(`DEBUG (row): ${JSON.stringify(row)}`);
         if (row.changeset === baseRevision) {
@@ -39,6 +43,8 @@ export async function storeAndGetPreviousSizes(
   try {
     await pipeline(stream, fs.createWriteStream(destFile));
   } catch (e) {
+    console.log('Encountered error in pipeline');
+    console.log(e);
     if (e.code === 'NoSuchKey') {
       return null;
     }
