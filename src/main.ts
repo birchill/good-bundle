@@ -28,7 +28,10 @@ async function main(): Promise<void> {
     });
 
     // Find and validate config file
-    const configPath = `${process.env.GITHUB_WORKSPACE}/good-bundle.config.json`;
+    const configPath = path.join(
+      process.env.GITHUB_WORKSPACE!,
+      'good-bundle.config.json'
+    );
     if (!fs.existsSync(configPath)) {
       throw new Error(`Could not find config file at ${configPath}`);
     }
