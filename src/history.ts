@@ -42,9 +42,7 @@ export async function storeAndGetPreviousSizes(
       .pipe(csvParse({ headers: true }))
       .on('error', reject)
       .on('data', (row) => {
-        console.log(`Looking for ${baseRevision}, got ${row.changeset}`);
         if (row.changeset === baseRevision) {
-          console.log('Got a match!');
           result[row.name] = {
             size: row.size,
             compressedSize: row.compressedSize,
@@ -68,20 +66,25 @@ export async function storeAndGetPreviousSizes(
 
 async function getBranchHeadRev(branch: string): Promise<string> {
   let result: string = '';
+  let error: string = '';
   const options: ExecOptions = {
     cwd: process.env.GITHUB_WORKSPACE,
     listeners: {
       stdout: (data: Buffer) => {
-        console.log(`Got data: ${data.toString()}`);
         result += data.toString();
       },
       stderr: (data: Buffer) => {
-        console.log(`Got error: ${data.toString()}`);
+        error = data.toString();
+        console.error(`Got error: ${error}`);
       },
     },
   };
 
   await exec(`git rev-parse ${branch}`, [], options);
+
+  if (error) {
+    throw new Error(error);
+  }
 
   return result.trim();
 }
