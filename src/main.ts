@@ -19,9 +19,6 @@ import { getS3Instance, getS3Stream, uploadFileToS3, uploadToS3 } from './s3';
 
 async function main(): Promise<void> {
   try {
-    // Add some more logging
-    console.log(JSON.stringify(github.context, null, 2));
-
     // Get bucket parameters
     const bucket = core.getInput('bucket', { required: true });
     const region = core.getInput('region', { required: true });
@@ -113,7 +110,7 @@ async function main(): Promise<void> {
     const isPr = !!github.context.payload.pull_request;
     if (isPr) {
       await commentOnPr(assetSizes, previousSizes || {});
-    } else {
+    } else if (!getBranch().startsWith('dependabot')) {
       await uploadResults({
         statsFile,
         bucket,
