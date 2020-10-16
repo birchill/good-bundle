@@ -92,7 +92,16 @@ For example:
 
 ```yaml
 name: Record bundle stats
-on: [push, pull_request_target]
+on:
+  push:
+    # Don't upload stats from dependabot branch pushes
+    branches:
+      - '*'
+      - '*/*'
+      - '**'
+      - '!dependabot/**'
+  pull_request_target:
+    types: [opened, synchronize]
 
 jobs:
   report:
