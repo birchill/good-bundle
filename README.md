@@ -88,6 +88,9 @@ Inputs:
 - `awsSecretAccessKey` (required) - The secret access key used to read/write
   from the bucket.
 
+- `GITHUB_TOKEN` (optional) - `${{ secrets.GITHUB_TOKEN }}`. If supplied this
+  is used to add comments to PRs.
+
 For example:
 
 ```yaml
@@ -126,7 +129,7 @@ jobs:
           region: us-west-2
           awsAccessKey: ${{ secrets.AWS_ACCESS_KEY_ID }}
           awsSecretAccessKey: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 You can set the secret environment variables as follows:

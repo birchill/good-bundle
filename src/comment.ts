@@ -14,7 +14,7 @@ export async function commentOnPr(
     return;
   }
 
-  const token = core.getInput('repo-token');
+  const token = core.getInput('GITHUB_TOKEN');
   if (!token) {
     return;
   }
