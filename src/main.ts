@@ -184,9 +184,11 @@ async function uploadResults({
   const author = headCommit.author.username;
   const avatar = context.payload.sender?.avatar_url;
   const compareUrl = context.payload.compare || '';
-  const date = headCommit
+  const timestamp = headCommit
     ? new Date(headCommit.timestamp).getTime()
     : Date.now();
+  // QuickSight likes ISO strings
+  const date = new Date(timestamp).toISOString();
 
   // Upload stats file
   let statsFileUrl = '';
@@ -237,6 +239,7 @@ async function uploadResults({
           avatar,
           baseRevision,
           compareUrl,
+          timestamp,
           date,
           record.name,
           record.size,
@@ -257,6 +260,7 @@ async function uploadResults({
       'avatar',
       'baseRevision',
       'compare',
+      'timestamp',
       'date',
       'name',
       'size',
