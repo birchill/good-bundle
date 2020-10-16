@@ -8,6 +8,7 @@ import { getBranch } from './branch';
 import { serializeCsv } from './csv';
 import { storeAndGetPreviousSizes } from './history';
 import { logSizes } from './log';
+import { writeManifest } from './manifest';
 import { groupAssetRecordsByName, measureAssetSizes } from './measure';
 import { getS3Stream } from './s3';
 
@@ -112,7 +113,7 @@ async function main(): Promise<void> {
     });
 
     // Get existing sizes
-    const targetFile = `${process.env.HOME}/bundle-stats.csv`;
+    const targetFile = path.join(__dirname, 'bundle-stats.csv');
     let previousSizes = await storeAndGetPreviousSizes(
       existingLog,
       targetFile,
@@ -154,11 +155,22 @@ async function main(): Promise<void> {
       ]);
       contents = header + contents;
       fs.writeFileSync(targetFile, contents);
+
+      // Generate a manifest file
+      writeManifest({
+        keys: [key],
+        bucket,
+        region,
+        destFile: path.join(__dirname, 'quicksight_manifest.json'),
+      });
     }
+
+    // Upload stats file
+    // Upload manifest file
+    // Upload log file
 
     // store:
     // - Upload the stats file (rename to <changesetId>-stats.json)
-    // - Append a row to the CSV file
     // - If we created the file, generate a quicksight_manifest.json file and
     //   upload that too
 
