@@ -7,17 +7,20 @@ import * as path from 'path';
 import { getBranch } from './branch';
 import { commentOnPr } from './comment';
 import { serializeCsv } from './csv';
-import { storeAndGetPreviousSizes } from './history';
+import { AssetSizes, storeAndGetPreviousSizes } from './history';
 import { logSizes } from './log';
 import { getManifest } from './manifest';
-import { groupAssetRecordsByName, measureAssetSizes } from './measure';
+import {
+  AssetSummaryRecord,
+  groupAssetRecordsByName,
+  measureAssetSizes,
+} from './measure';
 import { getS3Instance, getS3Stream, uploadFileToS3, uploadToS3 } from './s3';
 
 async function main(): Promise<void> {
   try {
     // Get bucket parameters
     const bucket = core.getInput('bucket', { required: true });
-    const destDir = core.getInput('destDir');
     const region = core.getInput('region', { required: true });
     const awsAccessKey = core.getInput('awsAccessKey', { required: true });
     const awsSecretAccessKey = core.getInput('awsSecretAccessKey', {
@@ -61,22 +64,6 @@ async function main(): Promise<void> {
       }
     }
 
-    // Get push metadata
-    const branch = getBranch();
-    const changeset = process.env.GITHUB_SHA;
-    const context = github.context;
-    const headCommit = context.payload.head_commit;
-    // We only take the first line of the commit message because many tools
-    // (e.g. Google Data Portal) can't process CSV files with line breaks.
-    const commitMessage = headCommit
-      ? headCommit.message.split(/\r\n|\r|\n/)[0]
-      : '';
-    const before = context.payload.before;
-    const compareUrl = context.payload.compare || '';
-    const date = headCommit
-      ? new Date(headCommit.timestamp).getTime()
-      : Date.now();
-
     // Measure asset sizes
     const assetSizes = groupAssetRecordsByName(
       await measureAssetSizes(assets, { log: true })
@@ -94,16 +81,6 @@ async function main(): Promise<void> {
     core.setOutput('totalCompressedSize', totalCompressedSize);
 
     // Look for existing log file in S3 bucket
-    const toKey = (key: string): string => {
-      let prefix = '';
-      if (destDir) {
-        prefix =
-          destDir.lastIndexOf('/') === destDir.length - 1
-            ? destDir
-            : destDir + '/';
-      }
-      return `${prefix}${key}`;
-    };
     const s3 = getS3Instance({
       region,
       accessKey: awsAccessKey,
@@ -117,103 +94,31 @@ async function main(): Promise<void> {
     });
 
     // Get existing sizes
-    const logFile = path.join(__dirname, 'bundle-stats-001.csv');
+    const logFilename = path.join(__dirname, 'bundle-stats-001.csv');
     let previousSizes = await storeAndGetPreviousSizes(
       existingLog,
-      logFile,
-      before
+      logFilename,
+      github.context.payload.before
     );
 
     // Print different to console
     logSizes(assetSizes, previousSizes || {});
 
-    // Upload stats file
-    let statsFileUrl = '';
-    if (statsFile) {
-      const statsKey = toKey(`${changeset}-stats.json`);
-      core.info(`Uploading ${statsKey} to ${bucket}...`);
-      await uploadFileToS3({
-        bucket,
-        key: toKey(`${changeset}-stats.json`),
-        s3,
-        filePath: statsFile,
-        contentType: 'application/json',
-        immutable: true,
-      });
-      statsFileUrl = `https://${bucket}.s3-${region}.amazonaws.com/${statsKey}`;
-    }
-
-    // Upload manifest file if this is the first run
-    if (!previousSizes) {
-      const manifestKey = toKey('quicksight_manifest.json');
-      core.info(`Uploading ${manifestKey} to ${bucket}...`);
-      await uploadToS3({
-        bucket,
-        key: manifestKey,
-        s3,
-        content: JSON.stringify(
-          getManifest({
-            keys: [logKey],
-            bucket,
-            region,
-          })
-        ),
-        contentType: 'application/json',
-      });
-    }
-
-    // Write log file
-    let contents =
-      '\n' +
-      assetSizes
-        .map((record) =>
-          serializeCsv([
-            branch,
-            changeset,
-            commitMessage,
-            before,
-            compareUrl,
-            date,
-            record.name,
-            record.size,
-            record.compressedSize,
-            statsFileUrl,
-          ])
-        )
-        .join('\n');
-    if (previousSizes) {
-      fs.appendFileSync(logFile, contents);
+    const isPr = !!github.context.payload.pull_request;
+    if (isPr) {
+      await commentOnPr(assetSizes, previousSizes || {});
     } else {
-      const header = serializeCsv([
-        'branch',
-        'changeset',
-        'message',
-        'before',
-        'compare',
-        'date',
-        'name',
-        'size',
-        'compressedSize',
-        'statsUrl',
-      ]);
-      contents = header + contents;
-      fs.writeFileSync(logFile, contents);
+      await uploadResults({
+        statsFile,
+        bucket,
+        s3,
+        region,
+        previousSizes,
+        logKey,
+        assetSizes,
+        logFilename: logFilename,
+      });
     }
-
-    // Upload log file
-    //
-    // (We do this last in case there are any errors along the way.)
-    core.info(`Uploading ${logKey} to ${bucket}...`);
-    await uploadFileToS3({
-      bucket,
-      key: logKey,
-      s3,
-      filePath: logFile,
-      contentType: 'text/csv',
-    });
-
-    // If this is a PR, create a comment on the PR
-    await commentOnPr(assetSizes, previousSizes || {});
 
     core.info('Done.');
   } catch (error) {
@@ -222,3 +127,134 @@ async function main(): Promise<void> {
 }
 
 main();
+
+function toKey(key: string): string {
+  const destDir = core.getInput('destDir');
+  let prefix = '';
+  if (destDir) {
+    prefix =
+      destDir.lastIndexOf('/') === destDir.length - 1 ? destDir : destDir + '/';
+  }
+  return `${prefix}${key}`;
+}
+
+async function uploadResults({
+  statsFile,
+  bucket,
+  s3,
+  region,
+  logKey,
+  logFilename,
+  assetSizes,
+  previousSizes,
+}: {
+  statsFile: string | undefined;
+  bucket: string;
+  s3: AWS.S3;
+  region: string;
+  logKey: string;
+  logFilename: string;
+  assetSizes: Array<AssetSummaryRecord>;
+  previousSizes: AssetSizes | null;
+}) {
+  // Get push metadata
+  const branch = getBranch();
+  const changeset = process.env.GITHUB_SHA;
+  const context = github.context;
+  const headCommit = context.payload.head_commit;
+  // We only take the first line of the commit message because many tools
+  // (e.g. Google Data Portal) can't process CSV files with line breaks.
+  const commitMessage = headCommit
+    ? headCommit.message.split(/\r\n|\r|\n/)[0]
+    : '';
+  const before = context.payload.before;
+  const compareUrl = context.payload.compare || '';
+  const date = headCommit
+    ? new Date(headCommit.timestamp).getTime()
+    : Date.now();
+
+  // Upload stats file
+  let statsFileUrl = '';
+  if (statsFile) {
+    const statsKey = toKey(`${changeset}-stats.json`);
+    core.info(`Uploading ${statsKey} to ${bucket}...`);
+    await uploadFileToS3({
+      bucket,
+      key: toKey(`${changeset}-stats.json`),
+      s3,
+      filePath: statsFile,
+      contentType: 'application/json',
+      immutable: true,
+    });
+    statsFileUrl = `https://${bucket}.s3-${region}.amazonaws.com/${statsKey}`;
+  }
+
+  // Upload manifest file if this is the first run
+  if (!previousSizes) {
+    const manifestKey = toKey('quicksight_manifest.json');
+    core.info(`Uploading ${manifestKey} to ${bucket}...`);
+    await uploadToS3({
+      bucket,
+      key: manifestKey,
+      s3,
+      content: JSON.stringify(
+        getManifest({
+          keys: [logKey],
+          bucket,
+          region,
+        })
+      ),
+      contentType: 'application/json',
+    });
+  }
+
+  // Write log file
+  let contents =
+    '\n' +
+    assetSizes
+      .map((record) =>
+        serializeCsv([
+          branch,
+          changeset,
+          commitMessage,
+          before,
+          compareUrl,
+          date,
+          record.name,
+          record.size,
+          record.compressedSize,
+          statsFileUrl,
+        ])
+      )
+      .join('\n');
+  if (previousSizes) {
+    fs.appendFileSync(logFilename, contents);
+  } else {
+    const header = serializeCsv([
+      'branch',
+      'changeset',
+      'message',
+      'before',
+      'compare',
+      'date',
+      'name',
+      'size',
+      'compressedSize',
+      'statsUrl',
+    ]);
+    contents = header + contents;
+    fs.writeFileSync(logFilename, contents);
+  }
+
+  // Upload log file
+  //
+  // (We do this last in case there are any errors along the way.)
+  core.info(`Uploading ${logKey} to ${bucket}...`);
+  await uploadFileToS3({
+    bucket,
+    key: logKey,
+    s3,
+    filePath: logFilename,
+    contentType: 'text/csv',
+  });
+}
