@@ -74,6 +74,9 @@ While for a project with multiple assets using chunking, you might have:
 
 Inputs:
 
+- `project' (optiona) - A descriptive name for the project. Useful if you are
+  logging multiple projects to the same file. Defaults to owner/repository.
+
 - `bucket` (required) - The S3 bucket in which to store the result and stats file
   (if specified).
 

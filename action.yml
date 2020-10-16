@@ -1,6 +1,9 @@
 name: 'Good bundle'
 description: 'Logs and compares bundle statistics'
 inputs:
+  project:
+    description: 'An optional description used to identify the project'
+    required: false
   bucket:
     description: 'The S3 bucket to upload results and stats files to'
     required: true
