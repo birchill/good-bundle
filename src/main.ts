@@ -194,7 +194,7 @@ async function main(): Promise<void> {
         'compressedSize',
         'statsUrl',
       ]);
-      contents = header + contents;
+      contents = header + '\n' + contents;
       fs.writeFileSync(logFile, contents);
     }
 
