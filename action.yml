@@ -16,7 +16,7 @@ inputs:
   awsSecretAccessKey:
     description: The access secret key used to read/write the bucket
     required: true
-  repo-token:
+  GITHUB_TOKEN:
     description: 'The GITHUB_TOKEN secret. Required in order to comment on pull requests'
     required: false
 outputs:
