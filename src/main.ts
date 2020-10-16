@@ -10,7 +10,7 @@ import { storeAndGetPreviousSizes } from './history';
 import { logSizes } from './log';
 import { writeManifest } from './manifest';
 import { groupAssetRecordsByName, measureAssetSizes } from './measure';
-import { getS3Stream } from './s3';
+import { getS3Instance, getS3Stream, uploadFileToS3 } from './s3';
 
 async function main(): Promise<void> {
   try {
@@ -100,16 +100,23 @@ async function main(): Promise<void> {
     core.setOutput('totalCompressedSize', totalCompressedSize);
 
     // Look for existing log file in S3 bucket
-    let key = 'bundle-stats.csv';
-    if (dest) {
-      key = `${dest}/${key}`;
-    }
-    const existingLog = await getS3Stream({
-      bucket,
-      key,
+    const toKey = (key: string): string => {
+      let prefix = '';
+      if (dest) {
+        prefix = dest.lastIndexOf('/') === dest.length - 1 ? dest : dest + '/';
+      }
+      return `${prefix}${key}`;
+    };
+    const s3 = getS3Instance({
       region,
       accessKey: awsAccessKey,
       secretAccessKey: awsSecretAccessKey,
+    });
+    const key = toKey('bundle-stats.csv');
+    const existingLog = await getS3Stream({
+      bucket,
+      key,
+      s3,
     });
 
     // Get existing sizes
@@ -157,16 +164,23 @@ async function main(): Promise<void> {
       fs.writeFileSync(targetFile, contents);
 
       // Generate a manifest file
+      const manifestFile = path.join(__dirname, 'quicksight_manifest.json');
       writeManifest({
         keys: [key],
         bucket,
         region,
-        destFile: path.join(__dirname, 'quicksight_manifest.json'),
+        destFile: manifestFile,
+      });
+      await uploadFileToS3({
+        bucket,
+        key: toKey('quicksigh_manifest.json'),
+        s3,
+        sourcePath: manifestFile,
+        contentType: 'application/json',
       });
     }
 
     // Upload stats file
-    // Upload manifest file
     // Upload log file
 
     // store:
