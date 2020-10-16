@@ -1,11 +1,15 @@
 # Good bundle action
 
-Gathers bundle statistics and stores in an S3 bucket or compares them to a base revision.
+Gathers bundle size statistics and compares them to the base changeset,
+storing the result in an S3 bucket for later analysis / visualization.
 
 Statistics gathered for each configured asset:
 
 - Bundle size (uncompressed)
 - Bundle size (brotli compressed)
+
+Note that results are only stored for pushes to a branch, not for pull
+requests.
 
 ## Setup
 
@@ -25,10 +29,14 @@ Fetch the generated bucket name and AWS access keys. You'll need them in step 3.
 aws cloudformation describe-stacks --stack-name bundlesize-stack
 ```
 
-Note that the user credentials need to have `s3:ListBucket` privileges for the
-bucket itself (see the CloudFormation template for an example). This is need
-when fetching non-existent files. Without that privilege S3 will return an
-Access Denied error which this action will fail to treat as "Not Found".
+Note that the user credentials need to have `s3:ListBucket` privileges for
+the bucket itself (see the CloudFormation template for an example). This is
+needed to differentiate between non-existent files and incorrectly configured
+access privileges. Without the `s3:ListBucket` privilege, trying to access a
+non-existent object will return 'Access Denied'.
+
+`s3:PutObjectAcl` is also needed so that we can mark the uploaded files as
+public (so they can be consumed by third-party tools).
 
 ### 2. Create a configuration file
 
@@ -66,9 +74,6 @@ While for a project with multiple assets using chunking, you might have:
 
 Inputs:
 
-- `action` (optional, default: 'store') - 'store' or 'compare'.
-  Determines if we should store the results in S3 or compare and report them.
-
 - `bucket` (required) - The S3 bucket in which to store the result and stats file
   (if specified).
 
@@ -104,22 +109,9 @@ jobs:
       - name: Build production version
         run: yarn build:stats
 
-      - name: Record bundle stats
+      - name: Compare and record bundle stats
         uses: birchill/good-bundle@v1
-        if: startsWith(github.ref, 'refs/head')
         with:
-          action: store
-          bucket: myapp-stats
-          destDir: myapp
-          region: us-west-2
-          awsAccessKey: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          awsSecretAccessKey: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-
-      - name: Compare bundle size
-        uses: birchill/good-bundle@v1
-        if: startsWith(github.ref, 'refs/pull')
-        with:
-          action: compare
           bucket: myapp-stats
           destDir: myapp
           region: us-west-2

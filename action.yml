@@ -1,10 +1,6 @@
 name: 'Good bundle'
 description: 'Logs and compares bundle statistics'
 inputs:
-  action:
-    description: 'Which action to perform: record or compare'
-    required: true
-    default: 'record'
   bucket:
     description: 'The S3 bucket to upload results and stats files to'
     required: true

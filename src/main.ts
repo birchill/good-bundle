@@ -14,17 +14,6 @@ import { getS3Instance, getS3Stream, uploadFileToS3, uploadToS3 } from './s3';
 
 async function main(): Promise<void> {
   try {
-    // Validate input
-    //
-    // TODO: Drop this and just make the action itself detect if this is a PR
-    // or not, and only store results if it's a push.
-    const action = core.getInput('action', { required: true });
-    if (action !== 'store' && action !== 'compare') {
-      throw new Error(
-        `Unrecognized action "${action}". Only "store" and "compare" are recognized.`
-      );
-    }
-
     // Get bucket parameters
     const bucket = core.getInput('bucket', { required: true });
     const destDir = core.getInput('destDir');
