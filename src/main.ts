@@ -134,6 +134,7 @@ async function main(): Promise<void> {
     let statsFileUrl = '';
     if (statsFile) {
       const statsKey = toKey(`${changeset}-stats.json`);
+      core.info(`Uploading ${statsKey} to ${bucket}...`);
       await uploadFileToS3({
         bucket,
         key: toKey(`${changeset}-stats.json`),
@@ -147,9 +148,11 @@ async function main(): Promise<void> {
 
     // Upload manifest file if this is the first run
     if (!previousSizes) {
+      const manifestKey = toKey('quicksight_manifest.json');
+      core.info(`Uploading ${manifestKey} to ${bucket}...`);
       await uploadToS3({
         bucket,
-        key: toKey('quicksight_manifest.json'),
+        key: manifestKey,
         s3,
         content: JSON.stringify(
           getManifest({
@@ -201,6 +204,7 @@ async function main(): Promise<void> {
     // Upload log file
     //
     // (We do this last in case there are any errors along the way.)
+    core.info(`Uploading ${logKey} to ${bucket}...`);
     await uploadFileToS3({
       bucket,
       key: logKey,
@@ -210,6 +214,8 @@ async function main(): Promise<void> {
     });
 
     // TODO: If this is a PR, create a comment on the PR
+
+    core.info('Done.');
   } catch (error) {
     core.setFailed(error.message);
   }
