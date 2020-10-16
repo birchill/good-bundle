@@ -10,7 +10,7 @@ import { storeAndGetPreviousSizes } from './history';
 import { logSizes } from './log';
 import { getManifest } from './manifest';
 import { groupAssetRecordsByName, measureAssetSizes } from './measure';
-import { getS3Instance, getS3Stream, uploadToS3 } from './s3';
+import { getS3Instance, getS3Stream, uploadFileToS3, uploadToS3 } from './s3';
 
 async function main(): Promise<void> {
   try {
@@ -180,6 +180,17 @@ async function main(): Promise<void> {
     }
 
     // Upload stats file
+    if (statsFile) {
+      await uploadFileToS3({
+        bucket,
+        key: toKey(`${changeset}-stats.json`),
+        s3,
+        filePath: statsFile,
+        contentType: 'application/json',
+        immutable: true,
+      });
+    }
+
     // Upload log file
 
     // store:
