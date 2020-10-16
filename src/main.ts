@@ -110,7 +110,7 @@ async function main(): Promise<void> {
     const isPr = !!github.context.payload.pull_request;
     if (isPr) {
       await commentOnPr(assetSizes, previousSizes || {});
-    } else if (!getBranch().startsWith('dependabot')) {
+    } else {
       await uploadResults({
         statsFile,
         bucket,
