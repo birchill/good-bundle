@@ -16,7 +16,7 @@ See the included `cloudformation.yml` file for an example configuration.
 e.g.
 
 ```console
-aws cloudformation deploy --stack-name bundlesize-stack --template-file cloudformation.yml --capabilities CAPABILITY_IAM --region ap-northeast-1
+aws cloudformation deploy --stack-name bundlesize-stack --template-file cloudformation.yml --capabilities CAPABILITY_IAM --region us-west-2
 ```
 
 Fetch the generated bucket name and AWS access keys. You'll need them in step 3.
@@ -72,7 +72,7 @@ Inputs:
 - `bucket` (required) - The S3 bucket in which to store the result and stats file
   (if specified).
 
-- `dest` (optional) - A destination folder to use within the bucket.
+- `destDir` (optional) - A destination folder to use within the bucket.
 
 - `region` (required) - The AWS region of the bucket, e.g. `ap-northeast-1`.
 
@@ -110,8 +110,8 @@ jobs:
         with:
           action: store
           bucket: myapp-stats
-          dest: bundle-stats
-          region: ap-northeast-1
+          destDir: myapp
+          region: us-west-2
           awsAccessKey: ${{ secrets.AWS_ACCESS_KEY_ID }}
           awsSecretAccessKey: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
@@ -121,8 +121,8 @@ jobs:
         with:
           action: compare
           bucket: myapp-stats
-          dest: bundle-stats
-          region: ap-northeast-1
+          destDir: myapp
+          region: us-west-2
           awsAccessKey: ${{ secrets.AWS_ACCESS_KEY_ID }}
           awsSecretAccessKey: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 ```

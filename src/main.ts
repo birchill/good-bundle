@@ -27,7 +27,7 @@ async function main(): Promise<void> {
 
     // Get bucket parameters
     const bucket = core.getInput('bucket', { required: true });
-    const dest = core.getInput('dest');
+    const destDir = core.getInput('destDir');
     const region = core.getInput('region', { required: true });
     const awsAccessKey = core.getInput('awsAccessKey', { required: true });
     const awsSecretAccessKey = core.getInput('awsSecretAccessKey', {
@@ -102,8 +102,11 @@ async function main(): Promise<void> {
     // Look for existing log file in S3 bucket
     const toKey = (key: string): string => {
       let prefix = '';
-      if (dest) {
-        prefix = dest.lastIndexOf('/') === dest.length - 1 ? dest : dest + '/';
+      if (destDir) {
+        prefix =
+          destDir.lastIndexOf('/') === destDir.length - 1
+            ? destDir
+            : destDir + '/';
       }
       return `${prefix}${key}`;
     };

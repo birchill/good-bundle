@@ -32,7 +32,6 @@ export async function storeAndGetPreviousSizes(
       .pipe(csvParse({ headers: true }))
       .on('error', reject)
       .on('data', (row) => {
-        console.log(`DEBUG (row): ${JSON.stringify(row)}`);
         if (row.changeset === baseRevision) {
           result[row.name] = {
             size: row.size,
