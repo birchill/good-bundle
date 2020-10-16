@@ -32,7 +32,9 @@ export async function storeAndGetPreviousSizes(
       .pipe(csvParse({ headers: true }))
       .on('error', reject)
       .on('data', (row) => {
+        console.log(`Looking for ${baseRevision}, got ${row.changeset}`);
         if (row.changeset === baseRevision) {
+          console.log('Got a match!');
           result[row.name] = {
             size: row.size,
             compressedSize: row.compressedSize,
