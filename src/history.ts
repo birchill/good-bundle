@@ -27,6 +27,11 @@ export async function storeAndGetPreviousSizes(
       const result: AssetSizes = {};
       stream
         .clone()
+        .on('error', (err) => {
+          console.log('Encountered error in other thing');
+          console.log(err);
+          reject(err);
+        })
         .pipe(csvParse({ headers: true }))
         .on('error', (err) => {
           console.log('Encountered error in CSV parsing stream');
