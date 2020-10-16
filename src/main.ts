@@ -23,6 +23,8 @@ import { getS3Instance, getS3Stream, uploadFileToS3, uploadToS3 } from './s3';
 
 async function main(): Promise<void> {
   try {
+    console.log(JSON.stringify(github.context, null, 2));
+
     // Get bucket parameters
     const bucket = core.getInput('bucket', { required: true });
     const region = core.getInput('region', { required: true });
@@ -168,8 +170,6 @@ async function uploadResults({
   previousSizes: AssetSizes | null;
   baseRevision: string;
 }) {
-  console.log(JSON.stringify(github.context, null, 2));
-
   // Get push metadata
   const project = `${github.context.repo.owner}/${github.context.repo.repo}`;
   const branch = getBranch();
