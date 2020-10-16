@@ -130,8 +130,39 @@ async function main(): Promise<void> {
     // Print different to console
     logSizes(assetSizes, previousSizes || {});
 
-    // Write file
-    // TODO: Add path to log file
+    // Upload stats file
+    let statsFileUrl = '';
+    if (statsFile) {
+      const statsKey = toKey(`${changeset}-stats.json`);
+      await uploadFileToS3({
+        bucket,
+        key: toKey(`${changeset}-stats.json`),
+        s3,
+        filePath: statsFile,
+        contentType: 'application/json',
+        immutable: true,
+      });
+      statsFileUrl = `https://${bucket}.s3-${region}.amazonaws/${statsKey}`;
+    }
+
+    // Upload manifest file if this is the first run
+    if (!previousSizes) {
+      await uploadToS3({
+        bucket,
+        key: toKey('quicksight_manifest.json'),
+        s3,
+        content: JSON.stringify(
+          getManifest({
+            keys: [logKey],
+            bucket,
+            region,
+          })
+        ),
+        contentType: 'application/json',
+      });
+    }
+
+    // Write log file
     let contents = assetSizes
       .map((record) =>
         serializeCsv([
@@ -144,6 +175,7 @@ async function main(): Promise<void> {
           record.name,
           record.size,
           record.compressedSize,
+          statsFileUrl,
         ])
       )
       .join('\n');
@@ -160,36 +192,10 @@ async function main(): Promise<void> {
         'name',
         'size',
         'compressedSize',
+        'statsUrl',
       ]);
       contents = header + contents;
       fs.writeFileSync(logFile, contents);
-
-      // Generate a manifest file
-      await uploadToS3({
-        bucket,
-        key: toKey('quicksight_manifest.json'),
-        s3,
-        content: JSON.stringify(
-          getManifest({
-            keys: [logKey],
-            bucket,
-            region,
-          })
-        ),
-        contentType: 'application/json',
-      });
-    }
-
-    // Upload stats file
-    if (statsFile) {
-      await uploadFileToS3({
-        bucket,
-        key: toKey(`${changeset}-stats.json`),
-        s3,
-        filePath: statsFile,
-        contentType: 'application/json',
-        immutable: true,
-      });
     }
 
     // Upload log file
