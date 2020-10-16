@@ -13,20 +13,13 @@ export async function getS3Stream({
   region: string;
   accessKey: string;
   secretAccessKey: string;
-}): Promise<Readable | null> {
+}): Promise<Readable> {
   const credentials = new Credentials({
     accessKeyId: accessKey,
     secretAccessKey,
   });
   const s3 = new S3({ apiVersion: '2006-03-01', credentials, region });
 
-  try {
-    const request = s3.getObject({ Bucket: bucket, Key: key });
-    return request.createReadStream();
-  } catch (e) {
-    if (e.code === 'NoSuchKey') {
-      return null;
-    }
-    throw e;
-  }
+  const request = s3.getObject({ Bucket: bucket, Key: key });
+  return request.createReadStream();
 }

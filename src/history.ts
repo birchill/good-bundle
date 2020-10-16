@@ -14,7 +14,7 @@ export async function storeAndGetPreviousSizes(
   logStream: Readable,
   destFile: string,
   baseRevision: string
-): Promise<AssetSizes> {
+): Promise<AssetSizes | null> {
   // Look up the record for the base changeset while writing the contents
   // to a file.
   const stream = cloneable(logStream);
@@ -36,6 +36,13 @@ export async function storeAndGetPreviousSizes(
       .on('end', () => resolve(result));
   });
 
-  await pipeline(stream, fs.createWriteStream(destFile));
+  try {
+    await pipeline(stream, fs.createWriteStream(destFile));
+  } catch (e) {
+    if (e.code === 'NoSuchKey') {
+      return null;
+    }
+  }
+
   return await getPreviousSizes;
 }

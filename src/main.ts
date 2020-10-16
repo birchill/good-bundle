@@ -6,7 +6,7 @@ import * as path from 'path';
 
 import { getBranch } from './branch';
 import { serializeCsv } from './csv';
-import { AssetSizes, storeAndGetPreviousSizes } from './history';
+import { storeAndGetPreviousSizes } from './history';
 import { logSizes } from './log';
 import { groupAssetRecordsByName, measureAssetSizes } from './measure';
 import { getS3Stream } from './s3';
@@ -113,17 +113,14 @@ async function main(): Promise<void> {
 
     // Get existing sizes
     const targetFile = `${process.env.HOME}/bundle-stats.csv`;
-    let previousSizes: AssetSizes = {};
-    if (existingLog) {
-      previousSizes = await storeAndGetPreviousSizes(
-        existingLog,
-        targetFile,
-        before
-      );
-    }
+    let previousSizes = await storeAndGetPreviousSizes(
+      existingLog,
+      targetFile,
+      before
+    );
 
     // Print different to console
-    logSizes(assetSizes, previousSizes);
+    logSizes(assetSizes, previousSizes || {});
 
     console.log('Would write the following records:');
     console.log(
