@@ -23,8 +23,6 @@ import { getS3Instance, getS3Stream, uploadFileToS3, uploadToS3 } from './s3';
 
 async function main(): Promise<void> {
   try {
-    console.log(JSON.stringify(github.context, null, 2));
-
     // Get bucket parameters
     const bucket = core.getInput('bucket', { required: true });
     const region = core.getInput('region', { required: true });
@@ -117,7 +115,7 @@ async function main(): Promise<void> {
     const isPr = !!github.context.payload.pull_request;
     if (isPr) {
       await commentOnPr(assetSizes, previousSizes || {});
-    } else {
+    } else if (github.context.eventName === 'push') {
       await uploadResults({
         statsFile,
         bucket,
@@ -181,6 +179,8 @@ async function uploadResults({
   const commitMessage = headCommit
     ? headCommit.message.split(/\r\n|\r|\n/)[0]
     : '';
+  const author = headCommit.author.username;
+  const avatar = context.payload.sender?.avatar_url;
   const compareUrl = context.payload.compare || '';
   const date = headCommit
     ? new Date(headCommit.timestamp).getTime()
@@ -231,6 +231,8 @@ async function uploadResults({
           branch,
           changeset,
           commitMessage,
+          author,
+          avatar,
           baseRevision,
           compareUrl,
           date,
@@ -249,6 +251,8 @@ async function uploadResults({
       'branch',
       'changeset',
       'message',
+      'author',
+      'avatar',
       'baseRevision',
       'compare',
       'date',
