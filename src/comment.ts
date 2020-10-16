@@ -19,7 +19,7 @@ export async function commentOnPr(
     return;
   }
 
-  let body = '| Asset | Size | Compressed Size |\n';
+  let body = '| Asset | Size | Compressed size |\n';
   body += '| ----- | ---- | --------------- |\n';
 
   for (const asset of assets) {
