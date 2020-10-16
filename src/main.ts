@@ -122,22 +122,9 @@ async function main(): Promise<void> {
     // Print different to console
     logSizes(assetSizes, previousSizes || {});
 
-    console.log('Would write the following records:');
-    console.log(
-      serializeCsv([
-        'branch',
-        'changeset',
-        'message',
-        'before',
-        'compare',
-        'date',
-        'name',
-        'size',
-        'compressedSize',
-      ])
-    );
-    for (const record of assetSizes) {
-      console.log(
+    // Write file
+    let contents = assetSizes
+      .map((record) =>
         serializeCsv([
           branch,
           changeset,
@@ -149,7 +136,24 @@ async function main(): Promise<void> {
           record.size,
           record.compressedSize,
         ])
-      );
+      )
+      .join('\n');
+    if (previousSizes) {
+      fs.appendFileSync(targetFile, contents);
+    } else {
+      const header = serializeCsv([
+        'branch',
+        'changeset',
+        'message',
+        'before',
+        'compare',
+        'date',
+        'name',
+        'size',
+        'compressedSize',
+      ]);
+      contents = header + contents;
+      fs.writeFileSync(targetFile, contents);
     }
 
     // store:
