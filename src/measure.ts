@@ -57,7 +57,7 @@ export async function measureAssetSizes(
   return result;
 }
 
-type AssetSummaryRecord = {
+export type AssetSummaryRecord = {
   name: string;
   size: number;
   compressedSize: number;

@@ -1,13 +1,15 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
+import fg from 'fast-glob';
 import * as fs from 'fs';
 import * as path from 'path';
-import fg from 'fast-glob';
 
 import { getBranch } from './branch';
 import { serializeCsv } from './csv';
+import { AssetSizes, storeAndGetPreviousSizes } from './history';
+import { logSizes } from './log';
 import { groupAssetRecordsByName, measureAssetSizes } from './measure';
-import { getS3File } from './s3';
+import { getS3Stream } from './s3';
 
 async function main(): Promise<void> {
   try {
@@ -68,6 +70,18 @@ async function main(): Promise<void> {
       }
     }
 
+    // Get push metadata
+    const branch = getBranch();
+    const changeset = process.env.GITHUB_SHA;
+    const context = github.context;
+    const headCommit = context.payload.head_commit;
+    const commitMessage = headCommit ? headCommit.message : '';
+    const before = context.payload.before;
+    const compareUrl = context.payload.compare || '';
+    const date = headCommit
+      ? new Date(headCommit.timestamp).getTime()
+      : Date.now();
+
     // Measure asset sizes
     const assetSizes = groupAssetRecordsByName(
       await measureAssetSizes(assets, { log: true })
@@ -84,17 +98,32 @@ async function main(): Promise<void> {
     core.setOutput('totalSize', totalSize);
     core.setOutput('totalCompressedSize', totalCompressedSize);
 
-    // Get push metadata
-    const branch = getBranch();
-    const changeset = process.env.GITHUB_SHA;
-    const context = github.context;
-    const headCommit = context.payload.head_commit;
-    const commitMessage = headCommit ? headCommit.message : '';
-    const before = context.payload.before;
-    const compareUrl = context.payload.compare || '';
-    const date = headCommit
-      ? new Date(headCommit.timestamp).getTime()
-      : Date.now();
+    // Look for existing log file in S3 bucket
+    let key = 'bundle-stats.csv';
+    if (dest) {
+      key = `${dest}/${key}`;
+    }
+    const existingLog = await getS3Stream({
+      bucket,
+      key,
+      region,
+      accessKey: awsAccessKey,
+      secretAccessKey: awsSecretAccessKey,
+    });
+
+    // Get existing sizes
+    const targetFile = `${process.env.HOME}/bundle-stats.csv`;
+    let previousSizes: AssetSizes = {};
+    if (existingLog) {
+      previousSizes = await storeAndGetPreviousSizes(
+        existingLog,
+        targetFile,
+        before
+      );
+    }
+
+    // Print different to console
+    logSizes(assetSizes, previousSizes);
 
     console.log('Would write the following records:');
     console.log(
@@ -125,23 +154,6 @@ async function main(): Promise<void> {
         ])
       );
     }
-
-    // Get file from S3 bucket
-    let key = 'bundle-stats.csv';
-    if (dest) {
-      key = `${dest}/${key}`;
-    }
-    const currentFile = await getS3File({
-      bucket,
-      key,
-      region,
-      accessKey: awsAccessKey,
-      secretAccessKey: awsSecretAccessKey,
-    });
-    console.log(`currentFile: ${currentFile}`);
-
-    // Look up the record for the base changeset
-    // Print out the delta (abs. and percent) using fancy formatting
 
     // store:
     // - Upload the stats file (rename to <changesetId>-stats.json)

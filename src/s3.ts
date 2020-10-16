@@ -1,6 +1,7 @@
 import { Credentials, S3 } from 'aws-sdk';
+import { Readable } from 'stream';
 
-export async function getS3File({
+export async function getS3Stream({
   bucket,
   key,
   region,
@@ -12,7 +13,7 @@ export async function getS3File({
   region: string;
   accessKey: string;
   secretAccessKey: string;
-}): Promise<string | null> {
+}): Promise<Readable | null> {
   const credentials = new Credentials({
     accessKeyId: accessKey,
     secretAccessKey,
@@ -20,17 +21,8 @@ export async function getS3File({
   const s3 = new S3({ apiVersion: '2006-03-01', credentials, region });
 
   try {
-    const response = await s3.getObject({ Bucket: bucket, Key: key }).promise();
-
-    if (typeof response.Body === 'string') {
-      return response.Body;
-    }
-
-    if (Buffer.isBuffer(response.Body)) {
-      return (response.Body as Buffer).toString('utf-8');
-    }
-
-    throw new Error('Unexpected body type');
+    const request = s3.getObject({ Bucket: bucket, Key: key });
+    return request.createReadStream();
   } catch (e) {
     if (e.code === 'NoSuchKey') {
       return null;
