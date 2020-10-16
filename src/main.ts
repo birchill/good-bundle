@@ -143,7 +143,7 @@ async function main(): Promise<void> {
         contentType: 'application/json',
         immutable: true,
       });
-      statsFileUrl = `https://${bucket}.s3-${region}.amazonaws/${statsKey}`;
+      statsFileUrl = `https://${bucket}.s3-${region}.amazonaws.com/${statsKey}`;
     }
 
     // Upload manifest file if this is the first run
