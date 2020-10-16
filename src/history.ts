@@ -6,8 +6,6 @@ import * as fs from 'fs';
 import { pipeline as callbackPipeline, Readable } from 'stream';
 import { promisify } from 'util';
 
-import { getBranch } from './branch';
-
 const pipeline = promisify(callbackPipeline);
 
 export type AssetSizes = {
@@ -24,7 +22,7 @@ export async function storeAndGetPreviousSizes(
   // For a pull request, however, we should use the latest commit from the
   // target branch.
   if (github.context.payload.pull_request) {
-    baseRevision = getBranchHeadRev(getBranch());
+    baseRevision = getBranchHeadRev(process.env.GITHUB_BASE_REF!);
   }
 
   // Look up the record for the base changeset while writing the contents
