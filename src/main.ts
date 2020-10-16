@@ -163,22 +163,24 @@ async function main(): Promise<void> {
     }
 
     // Write log file
-    let contents = assetSizes
-      .map((record) =>
-        serializeCsv([
-          branch,
-          changeset,
-          commitMessage,
-          before,
-          compareUrl,
-          date,
-          record.name,
-          record.size,
-          record.compressedSize,
-          statsFileUrl,
-        ])
-      )
-      .join('\n');
+    let contents =
+      '\n' +
+      assetSizes
+        .map((record) =>
+          serializeCsv([
+            branch,
+            changeset,
+            commitMessage,
+            before,
+            compareUrl,
+            date,
+            record.name,
+            record.size,
+            record.compressedSize,
+            statsFileUrl,
+          ])
+        )
+        .join('\n');
     if (previousSizes) {
       fs.appendFileSync(logFile, contents);
     } else {
@@ -194,7 +196,7 @@ async function main(): Promise<void> {
         'compressedSize',
         'statsUrl',
       ]);
-      contents = header + '\n' + contents;
+      contents = header + contents;
       fs.writeFileSync(logFile, contents);
     }
 
