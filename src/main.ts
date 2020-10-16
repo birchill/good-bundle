@@ -168,7 +168,10 @@ async function uploadResults({
   previousSizes: AssetSizes | null;
   baseRevision: string;
 }) {
+  console.log(JSON.stringify(github.context, null, 2));
+
   // Get push metadata
+  const project = `${github.context.repo.owner}/${github.context.repo.repo}`;
   const branch = getBranch();
   const changeset = process.env.GITHUB_SHA;
   const context = github.context;
@@ -224,6 +227,7 @@ async function uploadResults({
     assetSizes
       .map((record) =>
         serializeCsv([
+          project,
           branch,
           changeset,
           commitMessage,
@@ -241,6 +245,7 @@ async function uploadResults({
     fs.appendFileSync(logFilename, contents);
   } else {
     const header = serializeCsv([
+      'project',
       'branch',
       'changeset',
       'message',
