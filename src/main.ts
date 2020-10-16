@@ -112,18 +112,18 @@ async function main(): Promise<void> {
       accessKey: awsAccessKey,
       secretAccessKey: awsSecretAccessKey,
     });
-    const key = toKey('bundle-stats.csv');
+    const logKey = toKey('bundle-stats-001.csv');
     const existingLog = await getS3Stream({
       bucket,
-      key,
+      key: logKey,
       s3,
     });
 
     // Get existing sizes
-    const targetFile = path.join(__dirname, 'bundle-stats.csv');
+    const logFile = path.join(__dirname, 'bundle-stats-001.csv');
     let previousSizes = await storeAndGetPreviousSizes(
       existingLog,
-      targetFile,
+      logFile,
       before
     );
 
@@ -131,6 +131,7 @@ async function main(): Promise<void> {
     logSizes(assetSizes, previousSizes || {});
 
     // Write file
+    // TODO: Add path to log file
     let contents = assetSizes
       .map((record) =>
         serializeCsv([
@@ -147,7 +148,7 @@ async function main(): Promise<void> {
       )
       .join('\n');
     if (previousSizes) {
-      fs.appendFileSync(targetFile, contents);
+      fs.appendFileSync(logFile, contents);
     } else {
       const header = serializeCsv([
         'branch',
@@ -161,7 +162,7 @@ async function main(): Promise<void> {
         'compressedSize',
       ]);
       contents = header + contents;
-      fs.writeFileSync(targetFile, contents);
+      fs.writeFileSync(logFile, contents);
 
       // Generate a manifest file
       await uploadToS3({
@@ -170,7 +171,7 @@ async function main(): Promise<void> {
         s3,
         content: JSON.stringify(
           getManifest({
-            keys: [key],
+            keys: [logKey],
             bucket,
             region,
           })
@@ -192,15 +193,17 @@ async function main(): Promise<void> {
     }
 
     // Upload log file
+    //
+    // (We do this last in case there are any errors along the way.)
+    await uploadFileToS3({
+      bucket,
+      key: logKey,
+      s3,
+      filePath: logFile,
+      contentType: 'text/csv',
+    });
 
-    // store:
-    // - Upload the stats file (rename to <changesetId>-stats.json)
-    // - If we created the file, generate a quicksight_manifest.json file and
-    //   upload that too
-
-    // compare:
-    // - Create a comment on the PR (if any)
-    // - Add a build status summary?
+    // TODO: If this is a PR, create a comment on the PR
   } catch (error) {
     core.setFailed(error.message);
   }
