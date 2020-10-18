@@ -14,11 +14,7 @@ export function logSizes(
     if (typeof baseline[asset.name] !== 'undefined') {
       const previous = baseline[asset.name];
       const diff = asset.size - previous.size;
-      const diffPercent = niceRound(diff / previous.size);
-      const compressedDiff = asset.compressedSize - previous.compressedSize;
-      const compressedDiffPercent = niceRound(
-        compressedDiff / previous.compressedSize
-      );
+      const diffPercent = niceRound((diff / previous.size) * 100);
       if (diff < 0) {
         summary += ` (${green(`-${formatBytes(diff)} -${diffPercent}%`)})`;
       } else if (diff > 0) {
@@ -29,6 +25,10 @@ export function logSizes(
 
       summary += ` compressed: ${formatBytes(asset.compressedSize)}`;
 
+      const compressedDiff = asset.compressedSize - previous.compressedSize;
+      const compressedDiffPercent = niceRound(
+        (compressedDiff / previous.compressedSize) * 100
+      );
       if (compressedDiff < 0) {
         summary += ` (${green(
           `-${formatBytes(compressedDiff)} -${compressedDiffPercent}%`

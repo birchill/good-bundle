@@ -28,7 +28,7 @@ export async function commentOnPr(
     if (typeof baseline[asset.name] !== 'undefined') {
       const previous = baseline[asset.name];
       const diff = asset.size - previous.size;
-      const diffPercent = niceRound(diff / previous.size);
+      const diffPercent = niceRound((diff / previous.size) * 100);
       if (diff < 0) {
         body += ` (▼${formatBytes(diff)} ▼${diffPercent}%})`;
       } else if (diff > 0) {
@@ -41,7 +41,7 @@ export async function commentOnPr(
 
       const compressedDiff = asset.compressedSize - previous.compressedSize;
       const compressedDiffPercent = niceRound(
-        compressedDiff / previous.compressedSize
+        (compressedDiff / previous.compressedSize) * 100
       );
       if (compressedDiff < 0) {
         body += ` (▼${formatBytes(
