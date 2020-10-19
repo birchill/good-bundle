@@ -16,7 +16,9 @@ export function logSizes(
       const diff = asset.size - previous.size;
       const diffPercent = niceRound((diff / previous.size) * 100);
       if (diff < 0) {
-        summary += ` (${green(`-${formatBytes(diff)} -${diffPercent}%`)})`;
+        summary += ` (${green(
+          `-${formatBytes(Math.abs(diff))} ${diffPercent}%`
+        )})`;
       } else if (diff > 0) {
         summary += ` (${red(`+${formatBytes(diff)} +${diffPercent}%`)})`;
       } else {
@@ -31,7 +33,7 @@ export function logSizes(
       );
       if (compressedDiff < 0) {
         summary += ` (${green(
-          `-${formatBytes(compressedDiff)} -${compressedDiffPercent}%`
+          `-${formatBytes(Math.abs(compressedDiff))} ${compressedDiffPercent}%`
         )})`;
       } else if (compressedDiff > 0) {
         summary += ` (${red(
