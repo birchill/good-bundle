@@ -30,7 +30,9 @@ export async function commentOnPr(
       const diff = asset.size - previous.size;
       const diffPercent = niceRound((diff / previous.size) * 100);
       if (diff < 0) {
-        body += ` (▼${formatBytes(diff)} ▼${diffPercent}%})`;
+        body += ` (▼${formatBytes(Math.abs(diff))} ▼${Math.abs(
+          diffPercent
+        )}%})`;
       } else if (diff > 0) {
         body += ` (▲${formatBytes(diff)} ▲${diffPercent}%)`;
       } else {
@@ -44,9 +46,9 @@ export async function commentOnPr(
         (compressedDiff / previous.compressedSize) * 100
       );
       if (compressedDiff < 0) {
-        body += ` (▼${formatBytes(
-          compressedDiff
-        )} ▼${compressedDiffPercent}%})`;
+        body += ` (▼${formatBytes(Math.abs(compressedDiff))} ▼${Math.abs(
+          compressedDiffPercent
+        )}%})`;
       } else if (compressedDiff > 0) {
         body += ` (▲${formatBytes(compressedDiff)} ▲${compressedDiffPercent}%)`;
       } else {
