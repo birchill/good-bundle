@@ -7,20 +7,21 @@ export async function generateReport(statsFile: string, reportFile: string) {
 
 async function installWebpackBundleAnalyzer() {
   const options: ExecOptions = {
-    silent: true,
+    cwd: process.env.GITHUB_WORKSPACE,
     failOnStdErr: true,
   };
 
-  await exec(`yarn install -g webpack-bundle-analyzer`, [], options);
+  await exec(`yarn install webpack-bundle-analyzer`, [], options);
 }
 
 async function runWebpackBundleAnalyzer(statsFile: string, reportFile: string) {
   const options: ExecOptions = {
+    cwd: process.env.GITHUB_WORKSPACE,
     failOnStdErr: true,
   };
 
   await exec(
-    `webpack-bundle-analyzer ${statsFile} --mode static -r ${reportFile} --no-open`,
+    `npx webpack-bundle-analyzer ${statsFile} --mode static -r ${reportFile} --no-open`,
     [],
     options
   );
