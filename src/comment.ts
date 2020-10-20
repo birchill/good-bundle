@@ -63,7 +63,7 @@ export async function commentOnPr(
   }
 
   if (reportUrl) {
-    body += `\nDetails: [Bundle analysis](${reportUrl})`;
+    body += `\n[Bundle analysis](${reportUrl})`;
   }
 
   const octokit = github.getOctokit(token);
