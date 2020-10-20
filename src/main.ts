@@ -117,7 +117,16 @@ async function main(): Promise<void> {
     let reportFile: string | undefined;
     if (statsFile) {
       reportFile = path.join(__dirname, 'report.html');
-      await generateReport(statsFile, reportFile);
+
+      // Try to guess the directory that holds the assets
+      const firstAssetWithAPath = Object.values(assets).find(
+        (paths) => paths.length
+      );
+      const bundleDir = firstAssetWithAPath
+        ? path.dirname(firstAssetWithAPath[0]!)
+        : undefined;
+
+      await generateReport(statsFile, reportFile, bundleDir);
     }
 
     // Upload the report regardless of whether or not this is a PR since
