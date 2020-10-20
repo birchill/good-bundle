@@ -19,6 +19,7 @@ import {
   groupAssetRecordsByName,
   measureAssetSizes,
 } from './measure';
+import { generateReport } from './report';
 import { getS3Instance, getS3Stream, uploadFileToS3, uploadToS3 } from './s3';
 
 async function main(): Promise<void> {
@@ -109,15 +110,41 @@ async function main(): Promise<void> {
       baseRevision
     );
 
-    // Print different to console
+    // Print difference to console
     logSizes(assetSizes, previousSizes || {});
+
+    // Generate report
+    let reportFile: string | undefined;
+    if (statsFile) {
+      reportFile = path.join(__dirname, 'report.html');
+      await generateReport(statsFile, reportFile);
+    }
+
+    // Upload the report regardless of whether or not this is a PR since
+    // it's still useful to have it then.
+    let reportUrl = '';
+    if (reportFile) {
+      const reportKey = toKey(`${process.env.GITHUB_SHA}-report.html`);
+      core.info(`Uploading ${reportKey} to ${bucket}...`);
+      await uploadFileToS3({
+        bucket,
+        key: reportKey,
+        s3,
+        filePath: reportFile,
+        contentType: 'text/html; charset=utf-8',
+        immutable: true,
+      });
+      reportUrl = `https://${bucket}.s3-${region}.amazonaws.com/${reportKey}`;
+      console.log(`Report available at ${reportUrl}`);
+    }
 
     const isPr = !!github.context.payload.pull_request;
     if (isPr) {
-      await commentOnPr(assetSizes, previousSizes || {});
+      await commentOnPr(assetSizes, previousSizes || {}, reportUrl);
     } else if (github.context.eventName === 'push') {
       await uploadResults({
         statsFile,
+        reportFileUrl: reportUrl,
         bucket,
         s3,
         region,
@@ -159,6 +186,7 @@ async function uploadResults({
   baseRevision,
 }: {
   statsFile: string | undefined;
+  reportFileUrl: string | undefined;
   bucket: string;
   s3: AWS.S3;
   region: string;
@@ -197,7 +225,7 @@ async function uploadResults({
     core.info(`Uploading ${statsKey} to ${bucket}...`);
     await uploadFileToS3({
       bucket,
-      key: toKey(`${changeset}-stats.json`),
+      key: statsKey,
       s3,
       filePath: statsFile,
       contentType: 'application/json',
@@ -226,6 +254,8 @@ async function uploadResults({
   }
 
   // Write log file
+  //
+  // TODO: Add reportFileUrl to this
   let contents =
     '\n' +
     assetSizes

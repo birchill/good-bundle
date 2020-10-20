@@ -7,7 +7,8 @@ import { AssetSummaryRecord } from './measure';
 
 export async function commentOnPr(
   assets: Array<AssetSummaryRecord>,
-  baseline: AssetSizes
+  baseline: AssetSizes,
+  reportUrl: string | undefined
 ) {
   const prNumber = github.context.payload.pull_request?.number;
   if (!prNumber) {
@@ -59,6 +60,10 @@ export async function commentOnPr(
     }
 
     body += ' |\n';
+  }
+
+  if (reportUrl) {
+    body += `\nDetails: [Bundle analysis](${reportUrl})`;
   }
 
   const octokit = github.getOctokit(token);
