@@ -7,8 +7,8 @@ export async function generateReport(statsFile: string, reportFile: string) {
 
 async function installWebpackBundleAnalyzer() {
   const options: ExecOptions = {
+    silent: true,
     cwd: process.env.GITHUB_WORKSPACE,
-    failOnStdErr: true,
   };
 
   await exec(`yarn add webpack-bundle-analyzer`, [], options);
