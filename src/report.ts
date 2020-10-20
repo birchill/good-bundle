@@ -11,7 +11,7 @@ async function installWebpackBundleAnalyzer() {
     failOnStdErr: true,
   };
 
-  await exec(`yarn install webpack-bundle-analyzer`, [], options);
+  await exec(`yarn add webpack-bundle-analyzer`, [], options);
 }
 
 async function runWebpackBundleAnalyzer(statsFile: string, reportFile: string) {
