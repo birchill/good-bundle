@@ -94,6 +94,8 @@ export function getComparisonUrl({
   baseline: PreviousRunData;
   url: string;
 }): string | null {
+  console.log(JSON.stringify(previousRun));
+  console.log(Object.values(previousRun));
   // All the entries in the previous run should have the same statsFileUrl so
   // just take the first one.
   if (
