@@ -2,9 +2,9 @@
 
 ## What is this?
 
-A GitHub action that collects bundle size statistics and stores them
-in an S3 bucket you provide allowing you to compare the size for new
-Pull Requests or visualize and analyze the change over time.
+A GitHub action that collects bundle size statistics and stores them in an S3
+bucket you allowing you to compare the effect of new Pull Requests on bundle size
+or visualize and analyze the change over time.
 
 Statistics gathered for each configured asset:
 
@@ -13,12 +13,9 @@ Statistics gathered for each configured asset:
 
 Other features:
 
-- Stores generated webpack stats file in S3 for future comparisons.
-- Stores generated webpack-bundle-analyzer reports too.
-- Comments on PRs showing the delta change with links to the above resources.
-
-Note that results are only stored for pushes to a branch, not for pull
-requests.
+- Stores generated webpack stats file in S3 for future comparisons
+- Stores generated webpack-bundle-analyzer reports too
+- Comments on PRs showing the delta change with links to the above resources
 
 ## Why?
 
@@ -29,14 +26,14 @@ I would never have made this if I knew about them to begin with.
 That said, it does have a few advantages:
 
 - Accurate size statistics
-  (in my testing Relative CI reported a 200Kb as being 280kb!)
+  (in my testing Relative CI reported a 200Kb asset as being 280kb!)
 - Reports brotli compressed size
-  (if you're lucky enough to be serving assets using Brotli)
-- You own your data in S3 so you can slice and dice it as you please.
-- For example, you can use the data in your own custom visualizations.
-- It comments on PRs.
+  (maybe you're lucky enough to be serving assets using Brotli)
+- You own your data in S3 so you can slice and dice it as you please
+- For example, you can use the data in your own custom visualizations
+- It comments on PRs
   (This feature is coming to Relative CI so hopefully this point will be moot
-  in the near future but for now I can live without it.)
+  in the near future.)
 
 ## Setup
 
@@ -55,6 +52,13 @@ Fetch the generated bucket name and AWS access keys. You'll need them in step 3.
 ```console
 aws cloudformation describe-stacks --stack-name bundlesize-stack
 ```
+
+(BEWARE: Having a CloudFormation template spit out secret access keys as an
+output parameter is an anti-pattern.
+Anyone who can inspect your stack can grab the keys and therefore put stuff
+in your bucket.
+It's up to you to decide if that's acceptable or not.
+If not, you'll want to create the same sort of stack manually.)
 
 Note that the user credentials need to have `s3:ListBucket` privileges for
 the bucket itself (see the CloudFormation template for an example). This is
@@ -98,7 +102,7 @@ For example, for a very simple project you might have:
 
 ```json
 {
-  "assets": { "bundle.js": "bundle.js" }`
+  "assets": { "bundle.js": "bundle.js" }
 }
 ```
 
@@ -106,7 +110,7 @@ Or even just:
 
 ```json
 {
-  "assets": { "JS": "*.js" }`
+  "assets": { "JS": "*.js" }
 }
 ```
 
