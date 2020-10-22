@@ -109,6 +109,6 @@ export function getComparisonUrl({
 
   const baselineUrl = Object.values(previousRun)[0].statsUrl!;
   return `https://compare.relative-ci.com/webpack/packages?url=${encodeURIComponent(
-    baselineUrl
-  )}&url=${encodeURIComponent(statsUrl)}`;
+    statsUrl
+  )}&url=${encodeURIComponent(baselineUrl)}`;
 }
