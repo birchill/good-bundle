@@ -9,7 +9,7 @@ export async function commentOnPr(
   assets: Array<AssetSummaryRecord>,
   baseline: PreviousRunData,
   reportUrl: string | undefined,
-  statsFileUrl: string | undefined
+  statsUrl: string | undefined
 ) {
   const prNumber = github.context.payload.pull_request?.number;
   if (!prNumber) {
@@ -67,8 +67,11 @@ export async function commentOnPr(
   if (reportUrl) {
     extraLinks.push(`[Bundle analysis](${reportUrl})`);
   }
-  if (statsFileUrl) {
-    const comparisonUrl = getComparisonUrl({ baseline, url: statsFileUrl });
+  if (statsUrl) {
+    const comparisonUrl = getComparisonUrl({
+      baseline,
+      statsUrl: statsUrl,
+    });
     if (comparisonUrl) {
       extraLinks.push(`[Detailed comparison](${comparisonUrl})`);
     }
@@ -89,25 +92,23 @@ export async function commentOnPr(
 
 export function getComparisonUrl({
   baseline: previousRun,
-  url,
+  statsUrl,
 }: {
   baseline: PreviousRunData;
-  url: string;
+  statsUrl: string;
 }): string | null {
-  console.log(JSON.stringify(previousRun));
-  console.log(Object.values(previousRun));
-  // All the entries in the previous run should have the same statsFileUrl so
+  // All the entries in the previous run should have the same statsUrl so
   // just take the first one.
   if (
     !previousRun ||
     !Object.values(previousRun).length ||
-    !Object.values(previousRun)[0].statsFileUrl
+    !Object.values(previousRun)[0].statsUrl
   ) {
     return null;
   }
 
-  const baselineUrl = Object.values(previousRun)[0].statsFileUrl!;
+  const baselineUrl = Object.values(previousRun)[0].statsUrl!;
   return `https://compare.relative-ci.com/webpack/packages?url=${encodeURIComponent(
     baselineUrl
-  )}&url=${encodeURIComponent(url)}`;
+  )}&url=${encodeURIComponent(statsUrl)}`;
 }

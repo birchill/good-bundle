@@ -91,7 +91,7 @@ async function main(): Promise<void> {
     // Upload the stats and report.
     //
     // We do this even for PRs since we use it in the PR comment.
-    let statsFileUrl = '';
+    let statsUrl = '';
     if (statsFile) {
       const statsKey = toKey(`${process.env.GITHUB_SHA}-stats.json`);
       core.info(`Uploading ${statsKey} to ${bucket}...`);
@@ -103,11 +103,11 @@ async function main(): Promise<void> {
         contentType: 'application/json',
         immutable: true,
       });
-      statsFileUrl = `https://${bucket}.s3-${region}.amazonaws.com/${statsKey}`;
+      statsUrl = `https://${bucket}.s3-${region}.amazonaws.com/${statsKey}`;
 
       const comparisonUrl = getComparisonUrl({
         baseline: previousRun || {},
-        url: statsFileUrl,
+        statsUrl,
       });
       if (comparisonUrl) {
         console.log(`Run comparison can be viewed at: ${comparisonUrl}`);
@@ -132,11 +132,11 @@ async function main(): Promise<void> {
 
     const isPr = !!github.context.payload.pull_request;
     if (isPr) {
-      await commentOnPr(assetSizes, previousRun || {}, reportUrl, statsFileUrl);
+      await commentOnPr(assetSizes, previousRun || {}, reportUrl, statsUrl);
     } else if (github.context.eventName === 'push') {
       await uploadResults({
-        statsFileUrl,
-        reportFileUrl: reportUrl,
+        statsUrl,
+        reportUrl,
         bucket,
         s3,
         region,
@@ -167,7 +167,7 @@ function toKey(key: string): string {
 }
 
 async function uploadResults({
-  statsFileUrl,
+  statsUrl,
   bucket,
   s3,
   region,
@@ -177,8 +177,8 @@ async function uploadResults({
   previousSizes,
   baseRevision,
 }: {
-  statsFileUrl: string | undefined;
-  reportFileUrl: string | undefined;
+  statsUrl: string | undefined;
+  reportUrl: string | undefined;
   bucket: string;
   s3: AWS.S3;
   region: string;
@@ -231,7 +231,7 @@ async function uploadResults({
 
   // Write log file
   //
-  // TODO: Add reportFileUrl to this
+  // TODO: Add reportUrl to this
   let contents =
     '\n' +
     assetSizes
@@ -250,7 +250,7 @@ async function uploadResults({
           record.name,
           record.size,
           record.compressedSize,
-          statsFileUrl,
+          statsUrl,
         ])
       )
       .join('\n');

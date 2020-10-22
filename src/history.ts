@@ -12,7 +12,7 @@ export type PreviousRunData = {
   [name: string]: {
     size: number;
     compressedSize: number;
-    statsFileUrl?: string;
+    statsUrl?: string;
   };
 };
 
@@ -43,7 +43,7 @@ export async function fetchHistory(
             result[row.name] = {
               size: row.size,
               compressedSize: row.compressedSize,
-              statsFileUrl: row.statsFileUrl,
+              statsUrl: row.statsUrl,
             };
           }
         })
