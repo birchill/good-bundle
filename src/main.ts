@@ -4,14 +4,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 import { getBranch } from './branch';
-import { commentOnPr } from './comment';
+import { commentOnPr, getComparisonUrl } from './comment';
 import { readConfig } from './config';
 import { serializeCsv } from './csv';
-import {
-  AssetSizes,
-  getBaseRevision,
-  storeAndGetPreviousSizes,
-} from './history';
+import { PreviousRunData, getBaseRevision, fetchHistory } from './history';
 import { logSizes } from './log';
 import { getManifest } from './manifest';
 import {
@@ -51,7 +47,7 @@ async function main(): Promise<void> {
     core.setOutput('totalSize', totalSize);
     core.setOutput('totalCompressedSize', totalCompressedSize);
 
-    // Look for existing log file in S3 bucket
+    // Look for an existing log file in the S3 bucket
     const s3 = getS3Instance({
       region,
       accessKey: awsAccessKey,
@@ -67,14 +63,14 @@ async function main(): Promise<void> {
     // Get existing sizes
     const logFilename = path.join(__dirname, 'bundle-stats-001.csv');
     const baseRevision = await getBaseRevision();
-    let previousSizes = await storeAndGetPreviousSizes(
+    let previousRun = await fetchHistory(
       existingLog,
       logFilename,
       baseRevision
     );
 
     // Print difference to console
-    logSizes(assetSizes, previousSizes || {});
+    logSizes(assetSizes, previousRun || {});
 
     // Generate report
     let reportFile: string | undefined;
@@ -92,8 +88,32 @@ async function main(): Promise<void> {
       await generateReport(statsFile, reportFile, bundleDir);
     }
 
-    // Upload the report regardless of whether or not this is a PR since
-    // it's still useful to have it then.
+    // Upload the stats and report.
+    //
+    // We do this even for PRs since we use it in the PR comment.
+    let statsFileUrl = '';
+    if (statsFile) {
+      const statsKey = toKey(`${process.env.GITHUB_SHA}-stats.json`);
+      core.info(`Uploading ${statsKey} to ${bucket}...`);
+      await uploadFileToS3({
+        bucket,
+        key: statsKey,
+        s3,
+        filePath: statsFile,
+        contentType: 'application/json',
+        immutable: true,
+      });
+      statsFileUrl = `https://${bucket}.s3-${region}.amazonaws.com/${statsKey}`;
+
+      const comparisonUrl = getComparisonUrl({
+        baseline: previousRun || {},
+        url: statsFileUrl,
+      });
+      if (comparisonUrl) {
+        console.log(`Run comparison can be viewed at: ${comparisonUrl}`);
+      }
+    }
+
     let reportUrl = '';
     if (reportFile) {
       const reportKey = toKey(`${process.env.GITHUB_SHA}-report.html`);
@@ -107,20 +127,20 @@ async function main(): Promise<void> {
         immutable: true,
       });
       reportUrl = `https://${bucket}.s3-${region}.amazonaws.com/${reportKey}`;
-      console.log(`Report available at ${reportUrl}`);
+      console.log(`Analysis available at ${reportUrl}`);
     }
 
     const isPr = !!github.context.payload.pull_request;
     if (isPr) {
-      await commentOnPr(assetSizes, previousSizes || {}, reportUrl);
+      await commentOnPr(assetSizes, previousRun || {}, reportUrl, statsFileUrl);
     } else if (github.context.eventName === 'push') {
       await uploadResults({
-        statsFile,
+        statsFileUrl,
         reportFileUrl: reportUrl,
         bucket,
         s3,
         region,
-        previousSizes,
+        previousSizes: previousRun,
         logKey,
         assetSizes,
         logFilename,
@@ -147,7 +167,7 @@ function toKey(key: string): string {
 }
 
 async function uploadResults({
-  statsFile,
+  statsFileUrl,
   bucket,
   s3,
   region,
@@ -157,7 +177,7 @@ async function uploadResults({
   previousSizes,
   baseRevision,
 }: {
-  statsFile: string | undefined;
+  statsFileUrl: string | undefined;
   reportFileUrl: string | undefined;
   bucket: string;
   s3: AWS.S3;
@@ -165,7 +185,7 @@ async function uploadResults({
   logKey: string;
   logFilename: string;
   assetSizes: Array<AssetSummaryRecord>;
-  previousSizes: AssetSizes | null;
+  previousSizes: PreviousRunData | null;
   baseRevision: string;
 }) {
   // Collect various metadata
@@ -189,22 +209,6 @@ async function uploadResults({
     : Date.now();
   // QuickSight likes ISO strings
   const date = new Date(timestamp).toISOString();
-
-  // Upload stats file
-  let statsFileUrl = '';
-  if (statsFile) {
-    const statsKey = toKey(`${changeset}-stats.json`);
-    core.info(`Uploading ${statsKey} to ${bucket}...`);
-    await uploadFileToS3({
-      bucket,
-      key: statsKey,
-      s3,
-      filePath: statsFile,
-      contentType: 'application/json',
-      immutable: true,
-    });
-    statsFileUrl = `https://${bucket}.s3-${region}.amazonaws.com/${statsKey}`;
-  }
 
   // Upload manifest file if this is the first run
   if (!previousSizes) {

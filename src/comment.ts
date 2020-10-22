@@ -2,13 +2,14 @@ import * as core from '@actions/core';
 import * as github from '@actions/github';
 
 import { formatBytes, niceRound } from './format';
-import { AssetSizes } from './history';
+import { PreviousRunData } from './history';
 import { AssetSummaryRecord } from './measure';
 
 export async function commentOnPr(
   assets: Array<AssetSummaryRecord>,
-  baseline: AssetSizes,
-  reportUrl: string | undefined
+  baseline: PreviousRunData,
+  reportUrl: string | undefined,
+  statsFileUrl: string | undefined
 ) {
   const prNumber = github.context.payload.pull_request?.number;
   if (!prNumber) {
@@ -62,8 +63,19 @@ export async function commentOnPr(
     body += ' |\n';
   }
 
+  const extraLinks: Array<string> = [];
   if (reportUrl) {
-    body += `\n[Bundle analysis](${reportUrl})`;
+    extraLinks.push(`[Bundle analysis](${reportUrl})`);
+  }
+  if (statsFileUrl) {
+    const comparisonUrl = getComparisonUrl({ baseline, url: statsFileUrl });
+    if (comparisonUrl) {
+      extraLinks.push(`[Detailed comparison](${comparisonUrl})`);
+    }
+  }
+
+  if (extraLinks.length) {
+    body += `\n${extraLinks.join(' ')}`;
   }
 
   const octokit = github.getOctokit(token);
@@ -73,4 +85,27 @@ export async function commentOnPr(
     issue_number: prNumber,
     body,
   });
+}
+
+export function getComparisonUrl({
+  baseline: previousRun,
+  url,
+}: {
+  baseline: PreviousRunData;
+  url: string;
+}): string | null {
+  // All the entries in the previous run should have the same statsFileUrl so
+  // just take the first one.
+  if (
+    !previousRun ||
+    !Object.values(previousRun).length ||
+    !Object.values(previousRun)[0].statsFileUrl
+  ) {
+    return null;
+  }
+
+  const baselineUrl = Object.values(previousRun)[0].statsFileUrl!;
+  return `https://compare.relative-ci.com/webpack/packages?url=${encodeURIComponent(
+    baselineUrl
+  )}&url=${encodeURIComponent(url)}`;
 }

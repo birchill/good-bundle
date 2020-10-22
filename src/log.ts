@@ -1,12 +1,12 @@
 import * as core from '@actions/core';
 
 import { formatBytes, green, niceRound, red } from './format';
-import { AssetSizes } from './history';
+import { PreviousRunData } from './history';
 import { AssetSummaryRecord } from './measure';
 
 export function logSizes(
   assets: Array<AssetSummaryRecord>,
-  baseline: AssetSizes
+  baseline: PreviousRunData
 ) {
   for (const asset of assets) {
     let summary = `${asset.name} ${formatBytes(asset.size)}`;
