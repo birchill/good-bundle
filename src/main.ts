@@ -1,11 +1,11 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
-import fg from 'fast-glob';
 import * as fs from 'fs';
 import * as path from 'path';
 
 import { getBranch } from './branch';
 import { commentOnPr } from './comment';
+import { readConfig } from './config';
 import { serializeCsv } from './csv';
 import {
   AssetSizes,
@@ -32,45 +32,8 @@ async function main(): Promise<void> {
       required: true,
     });
 
-    // Find and validate config file
-    const configPath = path.join(
-      process.env.GITHUB_WORKSPACE!,
-      'good-bundle.config.json'
-    );
-    if (!fs.existsSync(configPath)) {
-      throw new Error(`Could not find config file at ${configPath}`);
-    }
-    const config = JSON.parse(
-      fs.readFileSync(configPath, { encoding: 'utf-8' })
-    );
-    if (!config) {
-      throw new Error('Got empty config');
-    }
-
-    // Validate assets
-    if (typeof config.assets !== 'object' || !config.assets) {
-      throw new Error('Missing assets key in configuration');
-    }
-    const assets: { [label: string]: Array<string> } = config.assets;
-    for (const [key, value] of Object.entries(config.assets)) {
-      if (typeof key !== 'string' || typeof value !== 'string' || !value) {
-        throw new Error(`Invalid asset definition: ${key}: ${value}`);
-      }
-      const entries = await fg(value, { dot: true });
-      if (!entries.length) {
-        throw new Error(`Didn't find any matches for pattern ${value}`);
-      }
-      assets[key] = entries;
-    }
-
-    // Validate stats file
-    let statsFile: string | undefined;
-    if (typeof config.stats === 'string') {
-      statsFile = path.join(process.env.GITHUB_WORKSPACE!, config.stats);
-      if (!fs.existsSync(statsFile)) {
-        throw new Error(`Could not find stats file: ${statsFile}`);
-      }
-    }
+    // Read config
+    const { assets, statsFile } = await readConfig();
 
     // Measure asset sizes
     const assetSizes = groupAssetRecordsByName(

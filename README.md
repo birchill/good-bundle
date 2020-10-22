@@ -1,15 +1,42 @@
 # Good bundle action
 
-Gathers bundle size statistics and compares them to the base changeset,
-storing the result in an S3 bucket for later analysis / visualization.
+## What is this?
+
+A GitHub action that collects bundle size statistics and stores them
+in an S3 bucket you provide allowing you to compare the size for new
+Pull Requests or visualize and analyze the change over time.
 
 Statistics gathered for each configured asset:
 
 - Bundle size (uncompressed)
 - Bundle size (brotli compressed)
 
+Other features:
+
+- Stores generated webpack stats file in S3 for future comparisons.
+- Stores generated webpack-bundle-analyzer reports too.
+- Comments on PRs showing the delta change with links to the above resources.
+
 Note that results are only stored for pushes to a branch, not for pull
 requests.
+
+## Why?
+
+Good question. You probably should check out
+[Relative CI](https://relative-ci.com/) instead.
+I would never have made this if I knew about them to begin with.
+
+That said, it does have a few advantages:
+
+- Accurate size statistics
+  (in my testing Relative CI reported a 200Kb as being 280kb!)
+- Reports brotli compressed size
+  (if you're lucky enough to be serving assets using Brotli)
+- You own your data in S3 so you can slice and dice it as you please.
+- For example, you can use the data in your own custom visualizations.
+- It comments on PRs.
+  (This feature is coming to Relative CI so hopefully this point will be moot
+  in the near future but for now I can live without it.)
 
 ## Setup
 
@@ -38,22 +65,48 @@ non-existent object will return 'Access Denied'.
 `s3:PutObjectAcl` is also needed so that we can mark the uploaded files as
 public (so they can be consumed by third-party tools).
 
-### 2. Create a configuration file
+### 2. Add configuration
 
-Create a configuration file in the root of your project named `good-bundle.config.json`.
+Either:
+
+- Create a configuration file in the root of your project named
+  `good-bundle.config.json`, or
+- Add a `goodBundle` property to your `package.json`.
+
+If both are provided, `good-bundle.config.json` is used.
 
 Keys:
 
 - `assets` (required) - An object where the keys are the human-readable asset
   names and the values are globs specifying the file(s) to record under that asset.
 
+  We _could_ just look for a webpack stats JSON file, parse that and work out
+  the assets automatically but we don't yet.
+
+  Also, this setting allows you to ignore assets you don't care about, assign
+  human-readable names to individual assets (as opposed to the contenthash
+  filenames they may end up with), or use this with projects that don't use
+  webpack.
+
 - `stats` (optional) - Path to a webpack compilation stats file.
+
+  If provided, the file will be uploaded to S3, used to generate a
+  visualization of the asset contents, and used for more fine-grained
+  comparisons between different runs.
 
 For example, for a very simple project you might have:
 
 ```json
 {
   "assets": { "bundle.js": "bundle.js" }`
+}
+```
+
+Or even just:
+
+```json
+{
+  "assets": { "JS": "*.js" }`
 }
 ```
 
@@ -64,9 +117,10 @@ While for a project with multiple assets using chunking, you might have:
   "assets": {
     "main.js": "dist/main.*.js",
     "worker.js": "dist/worker.*.js",
+    "JS total": "dist/*.js",
     "styles.css": "dist/styles.*.css"
   },
-  "stats": "stats.json"
+  "stats": "webpack-stats.json"
 }
 ```
 
@@ -74,11 +128,13 @@ While for a project with multiple assets using chunking, you might have:
 
 Inputs:
 
-- `project' (optiona) - A descriptive name for the project. Useful if you are
-  logging multiple projects to the same file. Defaults to owner/repository.
+- `project` (optional) - A descriptive name for the project.
+  Useful if you are logging multiple projects to the same file.
+  Defaults to `owner/repository`.
 
-- `bucket` (required) - The S3 bucket in which to store the result and stats file
-  (if specified).
+- `bucket` (required) - The S3 bucket in which to store the result.
+  If a webpack stats file is specified, it will also be stored along with
+  the report generated using `webpack-bundle-analyzer`.
 
 - `destDir` (optional) - A destination folder to use within the bucket.
 
@@ -121,7 +177,7 @@ jobs:
       - name: yarn install
         run: yarn install
 
-      - name: Build production version
+      - name: Build production version and generate stats too
         run: yarn build:stats
 
       - name: Compare and record bundle stats
