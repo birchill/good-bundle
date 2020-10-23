@@ -24,6 +24,7 @@
     "typescript": "^4.0.3"
   },
   "scripts": {
+    "postinstall": "husky install",
     "build": "tsc",
     "format": "prettier --write **/*.ts",
     "format-check": "prettier --check **/*.ts",
