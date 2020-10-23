@@ -25,15 +25,13 @@ I would never have made this if I knew about them to begin with.
 
 That said, it does have a few advantages:
 
-- Accurate size statistics
-  (in my testing Relative CI reported a 200Kb asset as being 280kb!)
-- Reports brotli compressed size
-  (maybe you're lucky enough to be serving assets using Brotli)
 - You own your data in S3 so you can slice and dice it as you please
 - For example, you can use the data in your own custom visualizations
 - It comments on PRs
   (This feature is coming to Relative CI so hopefully this point will be moot
   in the near future.)
+- Reports brotli compressed size
+  (maybe you're lucky enough to be serving assets using Brotli)
 
 ## Setup
 
