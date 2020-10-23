@@ -104,6 +104,7 @@ async function main(): Promise<void> {
         immutable: true,
       });
       statsUrl = `https://${bucket}.s3-${region}.amazonaws.com/${statsKey}`;
+      core.setOutput('statsUrl', statsUrl);
 
       const comparisonUrl = getComparisonUrl({
         baseline: previousRun || {},
@@ -128,6 +129,7 @@ async function main(): Promise<void> {
       });
       reportUrl = `https://${bucket}.s3-${region}.amazonaws.com/${reportKey}`;
       console.log(`Analysis available at ${reportUrl}`);
+      core.setOutput('reportUrl', reportUrl);
     }
 
     const isPr = !!github.context.payload.pull_request;
@@ -288,4 +290,7 @@ async function uploadResults({
     filePath: logFilename,
     contentType: 'text/csv',
   });
+
+  const logUrl = `https://${bucket}.s3-${region}.amazonaws.com/${logKey}`;
+  core.setOutput('logUrl', logUrl);
 }
