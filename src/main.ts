@@ -5,7 +5,7 @@ import * as path from 'path';
 
 import { getBranch } from './branch';
 import { commentOnPr, getComparisonUrl } from './comment';
-import { readConfig } from './config';
+import { OutputDestination, readConfig } from './config';
 import { serializeCsv } from './csv';
 import { PreviousRunData, getBaseRevision, fetchHistory } from './history';
 import { logSizes } from './log';
@@ -20,16 +20,14 @@ import { getS3Instance, getS3Stream, uploadFileToS3, uploadToS3 } from './s3';
 
 async function main(): Promise<void> {
   try {
-    // Get bucket parameters
-    const bucket = core.getInput('bucket', { required: true });
-    const region = core.getInput('region', { required: true });
+    // Get credentials parameters
     const awsAccessKey = core.getInput('awsAccessKey', { required: true });
     const awsSecretAccessKey = core.getInput('awsSecretAccessKey', {
       required: true,
     });
 
     // Read config
-    const { assets, statsFile } = await readConfig();
+    const { assets, output, statsFile } = await readConfig();
 
     // Measure asset sizes
     const assetSizes = groupAssetRecordsByName(
@@ -49,13 +47,13 @@ async function main(): Promise<void> {
 
     // Look for an existing log file in the S3 bucket
     const s3 = getS3Instance({
-      region,
+      region: output.region,
       accessKey: awsAccessKey,
       secretAccessKey: awsSecretAccessKey,
     });
-    const logKey = toKey('bundle-stats-001.csv');
+    const logKey = toKey('bundle-stats-001.csv', output.destDir);
     const existingLog = await getS3Stream({
-      bucket,
+      bucket: output.bucketName,
       key: logKey,
       s3,
     });
@@ -93,17 +91,20 @@ async function main(): Promise<void> {
     // We do this even for PRs since we use it in the PR comment.
     let statsUrl = '';
     if (statsFile) {
-      const statsKey = toKey(`${process.env.GITHUB_SHA}-stats.json`);
-      core.info(`Uploading ${statsKey} to ${bucket}...`);
+      const statsKey = toKey(
+        `${process.env.GITHUB_SHA}-stats.json`,
+        output.destDir
+      );
+      core.info(`Uploading ${statsKey} to ${output.bucketName}...`);
       await uploadFileToS3({
-        bucket,
+        bucket: output.bucketName,
         key: statsKey,
         s3,
         filePath: statsFile,
         contentType: 'application/json',
         immutable: true,
       });
-      statsUrl = `https://${bucket}.s3-${region}.amazonaws.com/${statsKey}`;
+      statsUrl = `https://${output.bucketName}.s3-${output.region}.amazonaws.com/${statsKey}`;
       core.setOutput('statsUrl', statsUrl);
 
       const comparisonUrl = getComparisonUrl({
@@ -117,17 +118,20 @@ async function main(): Promise<void> {
 
     let reportUrl = '';
     if (reportFile) {
-      const reportKey = toKey(`${process.env.GITHUB_SHA}-report.html`);
-      core.info(`Uploading ${reportKey} to ${bucket}...`);
+      const reportKey = toKey(
+        `${process.env.GITHUB_SHA}-report.html`,
+        output.destDir
+      );
+      core.info(`Uploading ${reportKey} to ${output.bucketName}...`);
       await uploadFileToS3({
-        bucket,
+        bucket: output.bucketName,
         key: reportKey,
         s3,
         filePath: reportFile,
         contentType: 'text/html; charset=utf-8',
         immutable: true,
       });
-      reportUrl = `https://${bucket}.s3-${region}.amazonaws.com/${reportKey}`;
+      reportUrl = `https://${output.bucketName}.s3-${output.region}.amazonaws.com/${reportKey}`;
       console.log(`Analysis available at ${reportUrl}`);
       core.setOutput('reportUrl', reportUrl);
     }
@@ -139,9 +143,8 @@ async function main(): Promise<void> {
       await uploadResults({
         statsUrl,
         reportUrl,
-        bucket,
+        output,
         s3,
-        region,
         previousSizes: previousRun,
         logKey,
         assetSizes,
@@ -158,8 +161,7 @@ async function main(): Promise<void> {
 
 main();
 
-function toKey(key: string): string {
-  const destDir = core.getInput('destDir');
+function toKey(key: string, destDir?: string): string {
   let prefix = '';
   if (destDir) {
     prefix =
@@ -170,9 +172,8 @@ function toKey(key: string): string {
 
 async function uploadResults({
   statsUrl,
-  bucket,
+  output,
   s3,
-  region,
   logKey,
   logFilename,
   assetSizes,
@@ -181,9 +182,8 @@ async function uploadResults({
 }: {
   statsUrl: string | undefined;
   reportUrl: string | undefined;
-  bucket: string;
+  output: OutputDestination;
   s3: AWS.S3;
-  region: string;
   logKey: string;
   logFilename: string;
   assetSizes: Array<AssetSummaryRecord>;
@@ -191,9 +191,6 @@ async function uploadResults({
   baseRevision: string;
 }) {
   // Collect various metadata
-  const project =
-    core.getInput('project') ||
-    `${github.context.repo.owner}/${github.context.repo.repo}`;
   const branch = getBranch();
   const changeset = process.env.GITHUB_SHA;
   const context = github.context;
@@ -214,17 +211,17 @@ async function uploadResults({
 
   // Upload manifest file if this is the first run
   if (!previousSizes) {
-    const manifestKey = toKey('quicksight_manifest.json');
-    core.info(`Uploading ${manifestKey} to ${bucket}...`);
+    const manifestKey = toKey('quicksight_manifest.json', output.destDir);
+    core.info(`Uploading ${manifestKey} to ${output.bucketName}...`);
     await uploadToS3({
-      bucket,
+      bucket: output.bucketName,
       key: manifestKey,
       s3,
       content: JSON.stringify(
         getManifest({
           keys: [logKey],
-          bucket,
-          region,
+          bucket: output.bucketName,
+          region: output.region,
         })
       ),
       contentType: 'application/json',
@@ -239,7 +236,7 @@ async function uploadResults({
     assetSizes
       .map((record) =>
         serializeCsv([
-          project,
+          output.project,
           branch,
           changeset,
           commitMessage,
@@ -282,15 +279,15 @@ async function uploadResults({
   // Upload log file
   //
   // (We do this last in case there are any errors along the way.)
-  core.info(`Uploading ${logKey} to ${bucket}...`);
+  core.info(`Uploading ${logKey} to ${output.bucketName}...`);
   await uploadFileToS3({
-    bucket,
+    bucket: output.bucketName,
     key: logKey,
     s3,
     filePath: logFilename,
     contentType: 'text/csv',
   });
 
-  const logUrl = `https://${bucket}.s3-${region}.amazonaws.com/${logKey}`;
+  const logUrl = `https://${output.bucketName}.s3-${output.region}.amazonaws.com/${logKey}`;
   core.setOutput('logUrl', logUrl);
 }

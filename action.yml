@@ -1,18 +1,6 @@
 name: 'Good bundle'
 description: 'Logs and compares bundle statistics'
 inputs:
-  project:
-    description: 'An optional description used to identify the project'
-    required: false
-  bucket:
-    description: 'The S3 bucket to upload results and stats files to'
-    required: true
-  destDir:
-    description: 'The destination folder to use in the S3 bucket, if any'
-    required: false
-  region:
-    description: 'The AWS region of the S3 bucket'
-    required: true
   awsAccessKey:
     description: The access key used to read/write the bucket
     required: true

@@ -90,6 +90,23 @@ Keys:
   filenames they may end up with), or use this with projects that don't use
   webpack.
 
+- `outputs` (required) - Where to write the results to.
+  Currently this array only takes one element. Any extra elements are
+  ignored.
+
+  - `bucket` (required) - The S3 bucket in which to store the result.
+    If a webpack stats file is specified (see `stats` below), it will also be
+    stored along with the report generated using `webpack-bundle-analyzer`.
+
+  - `destDir` (optional) - A destination folder to use within the bucket.
+
+  - `region` (required) - The AWS region of the bucket, e.g. `ap-northeast-1`.
+
+  - `project` (optional) - A descriptive name to use for the project.
+    This is added to each record in the output file and is useful if you are
+    logging multiple projects to the same file.
+    Defaults to `owner/repository`.
+
 - `stats` (optional) - Path to a webpack compilation stats file.
 
   If provided, the file will be uploaded to S3, used to generate a
@@ -100,7 +117,13 @@ For example, for a very simple project you might have:
 
 ```json
 {
-  "assets": { "bundle.js": "bundle.js" }
+  "assets": { "bundle.js": "bundle.js" },
+  "outputs": [
+    {
+      "bucketName": "my-bucket",
+      "region": "us-west-2"
+    }
+  ]
 }
 ```
 
@@ -108,7 +131,13 @@ Or even just:
 
 ```json
 {
-  "assets": { "JS": "*.js" }
+  "assets": { "JS": "*.js" },
+  "outputs": [
+    {
+      "bucketName": "my-bucket",
+      "region": "us-west-2"
+    }
+  ]
 }
 ```
 
@@ -122,6 +151,14 @@ While for a project with multiple assets using chunking, you might have:
     "JS total": "dist/*.js",
     "styles.css": "dist/styles.*.css"
   },
+  "outputs": [
+    {
+      "bucketName": "my-bucket",
+      "destDir": "my-app",
+      "region": "us-west-2",
+      "project": "fe"
+    }
+  ],
   "stats": "webpack-stats.json"
 }
 ```
@@ -129,18 +166,6 @@ While for a project with multiple assets using chunking, you might have:
 ### 3. Set up a GitHub action
 
 Inputs:
-
-- `project` (optional) - A descriptive name for the project.
-  Useful if you are logging multiple projects to the same file.
-  Defaults to `owner/repository`.
-
-- `bucket` (required) - The S3 bucket in which to store the result.
-  If a webpack stats file is specified, it will also be stored along with
-  the report generated using `webpack-bundle-analyzer`.
-
-- `destDir` (optional) - A destination folder to use within the bucket.
-
-- `region` (required) - The AWS region of the bucket, e.g. `ap-northeast-1`.
 
 - `awsAccessKey` (required) - The access key used to read/write from the
   bucket. See [AWS documentation on access and secret
@@ -185,9 +210,6 @@ jobs:
       - name: Compare and record bundle stats
         uses: birchill/good-bundle@v1
         with:
-          bucket: myapp-stats
-          destDir: myapp
-          region: us-west-2
           awsAccessKey: ${{ secrets.AWS_ACCESS_KEY_ID }}
           awsSecretAccessKey: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

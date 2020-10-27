@@ -1,15 +1,32 @@
+import * as github from '@actions/github';
 import * as fs from 'fs';
 import * as path from 'path';
 import fg from 'fast-glob';
 
 export type Config = {
   assets: { [name: string]: Array<string> };
+  output: OutputDestination;
   statsFile?: string;
+};
+
+export type OutputDestination = {
+  bucketName: string;
+  destDir?: string;
+  region: string;
+  project: string;
 };
 
 type RawConfig = {
   assets: { [name: string]: string };
+  outputs: Array<RawOutputDestination>;
   stats?: string;
+};
+
+type RawOutputDestination = {
+  bucketName: string;
+  destDir?: string;
+  region: string;
+  project?: string;
 };
 
 export async function readConfig(): Promise<Config> {
@@ -32,6 +49,17 @@ export async function readConfig(): Promise<Config> {
     assets[key] = entries;
   }
 
+  // Validate outputs
+  if (!Array.isArray(config.outputs) || !config.outputs.length) {
+    throw new Error('Missing outputs key in configuration');
+  }
+  if (config.outputs.length > 1) {
+    console.warn(
+      'Currently only one output destination is supported. Additional destinations will be ignored.'
+    );
+  }
+  const output = getOutputDestination(config.outputs[0]);
+
   // Validate stats file
   let statsFile: string | undefined;
   if (typeof config.stats === 'string') {
@@ -43,6 +71,7 @@ export async function readConfig(): Promise<Config> {
 
   return {
     assets,
+    output,
     statsFile,
   };
 }
@@ -89,4 +118,39 @@ function getConfigObject(): Object {
   }
 
   return packageJson[key];
+}
+
+function getOutputDestination(input: RawOutputDestination): OutputDestination {
+  if (!input || typeof input !== 'object') {
+    throw new Error('Invalid output destionation object');
+  }
+
+  const REQUIRED_KEYS: Array<keyof RawOutputDestination> = [
+    'bucketName',
+    'region',
+  ];
+  for (const key of REQUIRED_KEYS) {
+    if (typeof input[key] !== 'string' || !input[key]!.length) {
+      throw new Error(`Missing '${key}' property in output destination`);
+    }
+  }
+
+  if (
+    typeof input.destDir !== 'string' &&
+    typeof input.destDir !== 'undefined'
+  ) {
+    throw new Error(`Invalid destDir: ${input.destDir}`);
+  }
+
+  const project =
+    typeof input.project === 'string'
+      ? input.project
+      : `${github.context.repo.owner}/${github.context.repo.repo}`;
+
+  return {
+    bucketName: input['bucketName'],
+    destDir: input['destDir'],
+    region: input['region'],
+    project,
+  };
 }
