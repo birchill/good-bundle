@@ -120,7 +120,7 @@ For example, for a very simple project you might have:
   "assets": { "bundle.js": "bundle.js" },
   "outputs": [
     {
-      "bucketName": "my-bucket",
+      "bucket": "my-bucket",
       "region": "us-west-2"
     }
   ]
@@ -134,7 +134,7 @@ Or even just:
   "assets": { "JS": "*.js" },
   "outputs": [
     {
-      "bucketName": "my-bucket",
+      "bucket": "my-bucket",
       "region": "us-west-2"
     }
   ]
@@ -153,7 +153,7 @@ While for a project with multiple assets using chunking, you might have:
   },
   "outputs": [
     {
-      "bucketName": "my-bucket",
+      "bucket": "my-bucket",
       "destDir": "my-app",
       "region": "us-west-2",
       "project": "fe"

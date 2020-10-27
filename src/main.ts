@@ -53,7 +53,7 @@ async function main(): Promise<void> {
     });
     const logKey = toKey('bundle-stats-001.csv', output.destDir);
     const existingLog = await getS3Stream({
-      bucket: output.bucketName,
+      bucket: output.bucket,
       key: logKey,
       s3,
     });
@@ -95,16 +95,16 @@ async function main(): Promise<void> {
         `${process.env.GITHUB_SHA}-stats.json`,
         output.destDir
       );
-      core.info(`Uploading ${statsKey} to ${output.bucketName}...`);
+      core.info(`Uploading ${statsKey} to ${output.bucket}...`);
       await uploadFileToS3({
-        bucket: output.bucketName,
+        bucket: output.bucket,
         key: statsKey,
         s3,
         filePath: statsFile,
         contentType: 'application/json',
         immutable: true,
       });
-      statsUrl = `https://${output.bucketName}.s3-${output.region}.amazonaws.com/${statsKey}`;
+      statsUrl = `https://${output.bucket}.s3-${output.region}.amazonaws.com/${statsKey}`;
       core.setOutput('statsUrl', statsUrl);
 
       const comparisonUrl = getComparisonUrl({
@@ -122,16 +122,16 @@ async function main(): Promise<void> {
         `${process.env.GITHUB_SHA}-report.html`,
         output.destDir
       );
-      core.info(`Uploading ${reportKey} to ${output.bucketName}...`);
+      core.info(`Uploading ${reportKey} to ${output.bucket}...`);
       await uploadFileToS3({
-        bucket: output.bucketName,
+        bucket: output.bucket,
         key: reportKey,
         s3,
         filePath: reportFile,
         contentType: 'text/html; charset=utf-8',
         immutable: true,
       });
-      reportUrl = `https://${output.bucketName}.s3-${output.region}.amazonaws.com/${reportKey}`;
+      reportUrl = `https://${output.bucket}.s3-${output.region}.amazonaws.com/${reportKey}`;
       console.log(`Analysis available at ${reportUrl}`);
       core.setOutput('reportUrl', reportUrl);
     }
@@ -212,15 +212,15 @@ async function uploadResults({
   // Upload manifest file if this is the first run
   if (!previousSizes) {
     const manifestKey = toKey('quicksight_manifest.json', output.destDir);
-    core.info(`Uploading ${manifestKey} to ${output.bucketName}...`);
+    core.info(`Uploading ${manifestKey} to ${output.bucket}...`);
     await uploadToS3({
-      bucket: output.bucketName,
+      bucket: output.bucket,
       key: manifestKey,
       s3,
       content: JSON.stringify(
         getManifest({
           keys: [logKey],
-          bucket: output.bucketName,
+          bucket: output.bucket,
           region: output.region,
         })
       ),
@@ -279,15 +279,15 @@ async function uploadResults({
   // Upload log file
   //
   // (We do this last in case there are any errors along the way.)
-  core.info(`Uploading ${logKey} to ${output.bucketName}...`);
+  core.info(`Uploading ${logKey} to ${output.bucket}...`);
   await uploadFileToS3({
-    bucket: output.bucketName,
+    bucket: output.bucket,
     key: logKey,
     s3,
     filePath: logFilename,
     contentType: 'text/csv',
   });
 
-  const logUrl = `https://${output.bucketName}.s3-${output.region}.amazonaws.com/${logKey}`;
+  const logUrl = `https://${output.bucket}.s3-${output.region}.amazonaws.com/${logKey}`;
   core.setOutput('logUrl', logUrl);
 }

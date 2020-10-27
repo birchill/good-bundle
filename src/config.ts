@@ -10,7 +10,7 @@ export type Config = {
 };
 
 export type OutputDestination = {
-  bucketName: string;
+  bucket: string;
   destDir?: string;
   region: string;
   project: string;
@@ -23,7 +23,7 @@ type RawConfig = {
 };
 
 type RawOutputDestination = {
-  bucketName: string;
+  bucket: string;
   destDir?: string;
   region: string;
   project?: string;
@@ -125,10 +125,7 @@ function getOutputDestination(input: RawOutputDestination): OutputDestination {
     throw new Error('Invalid output destionation object');
   }
 
-  const REQUIRED_KEYS: Array<keyof RawOutputDestination> = [
-    'bucketName',
-    'region',
-  ];
+  const REQUIRED_KEYS: Array<keyof RawOutputDestination> = ['bucket', 'region'];
   for (const key of REQUIRED_KEYS) {
     if (typeof input[key] !== 'string' || !input[key]!.length) {
       throw new Error(`Missing '${key}' property in output destination`);
@@ -148,7 +145,7 @@ function getOutputDestination(input: RawOutputDestination): OutputDestination {
       : `${github.context.repo.owner}/${github.context.repo.repo}`;
 
   return {
-    bucketName: input['bucketName'],
+    bucket: input['bucket'],
     destDir: input['destDir'],
     region: input['region'],
     project,
