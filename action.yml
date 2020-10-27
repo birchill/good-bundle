@@ -1,10 +1,10 @@
 name: 'Good bundle'
 description: 'Logs and compares bundle statistics'
 inputs:
-  awsAccessKey:
+  AWS_ACCESS_KEY_ID:
     description: The access key used to read/write the bucket
     required: true
-  awsSecretAccessKey:
+  AWS_SECRET_ACCESS_KEY:
     description: The access secret key used to read/write the bucket
     required: true
   GITHUB_TOKEN:

@@ -167,11 +167,11 @@ While for a project with multiple assets using chunking, you might have:
 
 Inputs:
 
-- `awsAccessKey` (required) - The access key used to read/write from the
+- `AWS_ACCESS_KEY_ID` (required) - The access key used to read/write from the
   bucket. See [AWS documentation on access and secret
   keys](https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html#access-keys-and-secret-access-keys).
 
-- `awsSecretAccessKey` (required) - The secret access key used to read/write
+- `AWS_SECRET_ACCESS_KEY` (required) - The secret access key used to read/write
   from the bucket.
 
 - `GITHUB_TOKEN` (optional) - `${{ secrets.GITHUB_TOKEN }}`. If supplied this
@@ -210,8 +210,8 @@ jobs:
       - name: Compare and record bundle stats
         uses: birchill/good-bundle@v1
         with:
-          awsAccessKey: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          awsSecretAccessKey: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 

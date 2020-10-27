@@ -20,9 +20,9 @@ import { getS3Instance, getS3Stream, uploadFileToS3, uploadToS3 } from './s3';
 
 async function main(): Promise<void> {
   try {
-    // Get credentials parameters
-    const awsAccessKey = core.getInput('awsAccessKey', { required: true });
-    const awsSecretAccessKey = core.getInput('awsSecretAccessKey', {
+    // Get credentials
+    const awsAccessKey = core.getInput('AWS_ACCESS_KEY_ID', { required: true });
+    const awsSecretAccessKey = core.getInput('AWS_SECRET_ACCESS_KEY', {
       required: true,
     });
 
