@@ -64,8 +64,7 @@ export async function fetchHistory(
 }
 
 export async function getBaseRevision(): Promise<string> {
-  // For a pull request, however, we should use the latest commit from the
-  // target branch.
+  // For a pull request, we should use the latest commit from the target branch.
   if (github.context.payload.pull_request) {
     return getBranchHeadRev(process.env.GITHUB_BASE_REF!);
   } else {
