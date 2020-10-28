@@ -236,4 +236,4 @@ The steps are roughly:
 
 e.g.
 
-![Example visualization](https://raw.githubusercontent.com/birchill/good-bundle/docs/QuickSight%20bundle%20size%20analysis.png)
+![Example visualization](https://raw.githubusercontent.com/birchill/good-bundle/main/docs/QuickSight%20bundle%20size%20analysis.png)
