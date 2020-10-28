@@ -222,11 +222,17 @@ You can set the secret environment variables as follows:
 1.  Secrets
 1.  New Secret
 
-### 4. Visualize it!
+## Visualization
 
-At this point you can load the data into Excel and visualize it there.
+Given the CSV file generated your easiest option would be just to use Excel or similar.
 
-Alternatively, since you have it in S3, you could use QuickSight (at USD9 a month).
+If you want to get fancy, however, there are other options.
+
+### QuickSight
+
+If you are already doing everything on AWS and have QuickSight (starting at
+USD9 a month) you can easily load the data in using the generated manifest
+file.
 
 The steps are roughly:
 
@@ -237,3 +243,22 @@ The steps are roughly:
 e.g.
 
 ![Example visualization](https://raw.githubusercontent.com/birchill/good-bundle/main/docs/QuickSight%20bundle%20size%20analysis.png)
+
+Bonus points for:
+
+- Creating a calculated field to display bytes as Kb etc.
+- Creating a calculated field to display the date in local time.
+- Making a parameter to toggle by branch and feeding that into the filter.
+
+### Grafana
+
+You can set up AWS Athena to look at your S3 bucket and then maybe the
+[Athena data source](https://github.com/mtanda/grafana-aws-athena-datasource)
+might work?
+
+### Google Data Studio
+
+You can always import a CSV file directly.
+
+Alternatively, perhaps you can try the AWS Athena connector:
+[datastudio-aws-athena-connector](https://github.com/canyousayyes/datastudio-aws-athena-connector).
