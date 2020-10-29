@@ -262,3 +262,7 @@ You can always import a CSV file directly.
 
 Alternatively, perhaps you can try the AWS Athena connector:
 [datastudio-aws-athena-connector](https://github.com/canyousayyes/datastudio-aws-athena-connector).
+
+e.g.
+
+![Example visualization](https://raw.githubusercontent.com/birchill/good-bundle/main/docs/Google%20data%20studio%20bundle%20size%20analysis.png)
