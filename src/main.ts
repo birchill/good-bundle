@@ -172,6 +172,7 @@ function toKey(key: string, destDir?: string): string {
 
 async function uploadResults({
   statsUrl,
+  reportUrl,
   output,
   s3,
   logKey,
@@ -195,18 +196,22 @@ async function uploadResults({
   const changeset = process.env.GITHUB_SHA;
   const context = github.context;
   const headCommit = context.payload.head_commit;
+
   // We only take the first line of the commit message because many tools
-  // (e.g. Google Data Portal) can't process CSV files with line breaks.
+  // (e.g. Google Data Studio) can't process CSV files with line breaks.
   const commitMessage = headCommit
     ? headCommit.message.split(/\r\n|\r|\n/)[0]
     : '';
+
   const author = headCommit.author.username;
   const avatar = context.payload.sender?.avatar_url;
   const compareUrl = context.payload.compare || '';
   const timestamp = headCommit
     ? new Date(headCommit.timestamp).getTime()
     : Date.now();
-  // QuickSight likes ISO strings
+
+  // QuickSight likes ISO strings so export it as a string too so QuickSight
+  // users can get productive without having to configure calculated fields.
   const date = new Date(timestamp).toISOString();
 
   // Upload manifest file if this is the first run
@@ -250,6 +255,7 @@ async function uploadResults({
           record.size,
           record.compressedSize,
           statsUrl,
+          reportUrl,
         ])
       )
       .join('\n');
@@ -271,6 +277,7 @@ async function uploadResults({
       'size',
       'compressedSize',
       'statsUrl',
+      'reportUrl',
     ]);
     contents = header + contents;
     fs.writeFileSync(logFilename, contents);
