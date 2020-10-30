@@ -17,7 +17,7 @@ export type OutputDestination = {
 };
 
 type RawConfig = {
-  assets: { [name: string]: string };
+  assets: { [name: string]: string | Array<string> };
   outputs: Array<RawOutputDestination>;
   stats?: string;
 };
@@ -39,7 +39,11 @@ export async function readConfig(): Promise<Config> {
   }
   const assets: { [label: string]: Array<string> } = {};
   for (const [key, value] of Object.entries(config.assets)) {
-    if (typeof key !== 'string' || typeof value !== 'string' || !value) {
+    if (
+      typeof key !== 'string' ||
+      (!(typeof value === 'string' && value.length > 0) &&
+        !isArrayOfStrings(value))
+    ) {
       throw new Error(`Invalid asset definition: ${key}: ${value}`);
     }
     const entries = await fg(value, { dot: true });
@@ -118,6 +122,12 @@ function getConfigObject(): Object {
   }
 
   return packageJson[key];
+}
+
+function isArrayOfStrings(value: unknown): value is Array<string> {
+  return (
+    Array.isArray(value) && value.every((value) => typeof value === 'string')
+  );
 }
 
 function getOutputDestination(input: RawOutputDestination): OutputDestination {

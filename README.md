@@ -82,6 +82,9 @@ Keys:
 - `assets` (required) - An object where the keys are the human-readable asset
   names and the values are globs specifying the file(s) to record under that asset.
 
+  The glob may be a string like `bundle.js` or `dist/*.js` or an array of strings
+  such as `["dist/app.*.js", "dist/locales/*.js"]`.
+
   We _could_ just look for a webpack stats JSON file, parse that and work out
   the assets automatically but we don't yet.
 
