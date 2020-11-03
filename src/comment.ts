@@ -78,7 +78,7 @@ export async function commentOnPr(
   }
 
   if (extraLinks.length) {
-    body += `\n${extraLinks.join(' ')}`;
+    body += `\n${extraLinks.join('・')}`;
   }
 
   const octokit = github.getOctokit(token);
