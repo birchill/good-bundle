@@ -84,3 +84,12 @@ async function _uploadToS3({
 
   await s3.putObject(params).promise();
 }
+
+export function toKey(key: string, destDir?: string): string {
+  let prefix = '';
+  if (destDir) {
+    prefix =
+      destDir.lastIndexOf('/') === destDir.length - 1 ? destDir : destDir + '/';
+  }
+  return `${prefix}${key}`;
+}

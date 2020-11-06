@@ -93,9 +93,12 @@ Keys:
   filenames they may end up with), or use this with projects that don't use
   webpack.
 
-- `outputs` (required) - Where to write the results to.
-  Currently this array only takes one element. Any extra elements are
-  ignored.
+- `output` (required) - Where to write the results to.
+
+  - `format` (optional) - `"csv"` or `"json"`. Defaults to `"csv"`.
+    An array may be specified to output to CSV and JSON.
+    The first format listed in the array will be treated as the primary source
+    when looking for historical results to compare the current result against.
 
   - `bucket` (required) - The S3 bucket in which to store the result.
     If a webpack stats file is specified (see `stats` below), it will also be
@@ -121,12 +124,10 @@ For example, for a very simple project you might have:
 ```json
 {
   "assets": { "bundle.js": "bundle.js" },
-  "outputs": [
-    {
-      "bucket": "my-bucket",
-      "region": "us-west-2"
-    }
-  ]
+  "output": {
+    "bucket": "my-bucket",
+    "region": "us-west-2"
+  }
 }
 ```
 
@@ -135,12 +136,10 @@ Or even just:
 ```json
 {
   "assets": { "JS": "*.js" },
-  "outputs": [
-    {
-      "bucket": "my-bucket",
-      "region": "us-west-2"
-    }
-  ]
+  "output": {
+    "bucket": "my-bucket",
+    "region": "us-west-2"
+  }
 }
 ```
 
@@ -154,14 +153,13 @@ While for a project with multiple assets using chunking, you might have:
     "JS total": "dist/*.js",
     "styles.css": "dist/styles.*.css"
   },
-  "outputs": [
-    {
-      "bucket": "my-bucket",
-      "destDir": "my-app",
-      "region": "us-west-2",
-      "project": "fe"
-    }
-  ],
+  "output": {
+    "bucket": "my-bucket",
+    "format": ["csv", "json"],
+    "destDir": "my-app",
+    "region": "us-west-2",
+    "project": "fe"
+  },
   "stats": "webpack-stats.json"
 }
 ```

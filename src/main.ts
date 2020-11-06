@@ -7,7 +7,7 @@ import { getBranch } from './branch';
 import { commentOnPr, getComparisonUrl } from './comment';
 import { OutputDestination, readConfig } from './config';
 import { serializeCsv } from './csv';
-import { PreviousRunData, getBaseRevision, fetchHistory } from './history';
+import { PreviousRunData, getBaseRevision, fetchPreviousRun } from './history';
 import { logSizes } from './log';
 import { getManifest } from './manifest';
 import {
@@ -16,7 +16,13 @@ import {
   measureAssetSizes,
 } from './measure';
 import { generateReport } from './report';
-import { getS3Instance, getS3Stream, uploadFileToS3, uploadToS3 } from './s3';
+import {
+  getS3Instance,
+  getS3Stream,
+  toKey,
+  uploadFileToS3,
+  uploadToS3,
+} from './s3';
 
 async function main(): Promise<void> {
   try {
@@ -51,21 +57,26 @@ async function main(): Promise<void> {
       accessKey: awsAccessKey,
       secretAccessKey: awsSecretAccessKey,
     });
-    const logKey = toKey('bundle-stats-001.csv', output.destDir);
-    const existingLog = await getS3Stream({
+
+    // The first-specified format is the primary format, i.e. the one we use
+    // for looking up historical results.
+    const format = output.format[0];
+    const logFilename = `bundle-stats-001.${format}`;
+    const logKey = toKey(logFilename, output.destDir);
+    const logStream = await getS3Stream({
       bucket: output.bucket,
       key: logKey,
       s3,
     });
 
     // Get existing sizes
-    const logFilename = path.join(__dirname, 'bundle-stats-001.csv');
     const baseRevision = await getBaseRevision();
-    let previousRun = await fetchHistory(
-      existingLog,
-      logFilename,
-      baseRevision
-    );
+    const previousRun = await fetchPreviousRun({
+      stream: logStream,
+      format,
+      destFile: path.join(__dirname, logFilename),
+      changeset: baseRevision,
+    });
 
     // Print difference to console
     logSizes(assetSizes, previousRun || {});
@@ -161,15 +172,6 @@ async function main(): Promise<void> {
 
 main();
 
-function toKey(key: string, destDir?: string): string {
-  let prefix = '';
-  if (destDir) {
-    prefix =
-      destDir.lastIndexOf('/') === destDir.length - 1 ? destDir : destDir + '/';
-  }
-  return `${prefix}${key}`;
-}
-
 async function uploadResults({
   statsUrl,
   reportUrl,
@@ -235,7 +237,7 @@ async function uploadResults({
 
   // Write log file
   //
-  // TODO: Add reportUrl to this
+  // XXX This needs to write both JSON and CSV formats
   let contents =
     '\n' +
     assetSizes

@@ -9,7 +9,10 @@ export type Config = {
   statsFile?: string;
 };
 
+export type OutputFormat = 'csv' | 'json';
+
 export type OutputDestination = {
+  format: Array<OutputFormat>;
   bucket: string;
   destDir?: string;
   region: string;
@@ -18,11 +21,12 @@ export type OutputDestination = {
 
 type RawConfig = {
   assets: { [name: string]: string | Array<string> };
-  outputs: Array<RawOutputDestination>;
+  output: RawOutputDestination;
   stats?: string;
 };
 
 type RawOutputDestination = {
+  format?: OutputFormat | Array<OutputFormat>;
   bucket: string;
   destDir?: string;
   region: string;
@@ -53,16 +57,11 @@ export async function readConfig(): Promise<Config> {
     assets[key] = entries;
   }
 
-  // Validate outputs
-  if (!Array.isArray(config.outputs) || !config.outputs.length) {
-    throw new Error('Missing outputs key in configuration');
+  // Validate output
+  if (!config.output) {
+    throw new Error('Missing output key in configuration');
   }
-  if (config.outputs.length > 1) {
-    console.warn(
-      'Currently only one output destination is supported. Additional destinations will be ignored.'
-    );
-  }
-  const output = getOutputDestination(config.outputs[0]);
+  const output = getOutputDestination(config.output);
 
   // Validate stats file
   let statsFile: string | undefined;
@@ -143,6 +142,24 @@ function getOutputDestination(input: RawOutputDestination): OutputDestination {
   }
 
   if (
+    typeof input.format !== 'undefined' &&
+    !isOutputFormat(input.format) &&
+    !(
+      Array.isArray(input.format) &&
+      input.format.length > 0 &&
+      input.format.every(isOutputFormat)
+    )
+  ) {
+    throw new Error(`Invalid format: ${input.format}`);
+  }
+  // Normalize to an array
+  const format: Array<OutputFormat> = Array.isArray(input.format)
+    ? input.format
+    : typeof input.format !== 'undefined'
+    ? [input.format]
+    : ['csv'];
+
+  if (
     typeof input.destDir !== 'string' &&
     typeof input.destDir !== 'undefined'
   ) {
@@ -155,9 +172,14 @@ function getOutputDestination(input: RawOutputDestination): OutputDestination {
       : `${github.context.repo.owner}/${github.context.repo.repo}`;
 
   return {
+    format,
     bucket: input['bucket'],
     destDir: input['destDir'],
     region: input['region'],
     project,
   };
+}
+
+function isOutputFormat(input: unknown): input is OutputFormat {
+  return typeof input === 'string' && ['csv', 'json'].includes(input);
 }
