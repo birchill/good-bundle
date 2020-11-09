@@ -19,8 +19,6 @@ outputs:
     description: 'The URL of the uploaded webpack stats JSON file (if provided)'
   reportUrl:
     description: 'The URL of the report generated using webpack-bundle-analyizer (if a stats file was provided)'
-  logUrl:
-    description: 'The URL of the uploaded log file (push events only)'
 runs:
   using: 'node12'
   main: 'dist/index.js'
