@@ -213,6 +213,9 @@ async function uploadResults({
   const date = new Date(timestamp).toISOString();
 
   // Upload manifest file if this is the first run
+  //
+  // Currently we only report the first file in the format list.
+  // I guess that's OK.
   if (!previousSizes) {
     const manifestKey = toKey('quicksight_manifest.json', output.destDir);
     core.info(`Uploading ${manifestKey} to ${output.bucket}...`);
@@ -250,10 +253,8 @@ async function uploadResults({
   for (const format of output.format) {
     const filename = `bundle-stats-001.${format}`;
     const key = toKey(filename, output.destDir);
-    console.log(format, key);
 
     if (format === 'csv') {
-      console.log('Appending CSV...');
       await appendCsvLog({
         data,
         assetSizes,
@@ -265,7 +266,6 @@ async function uploadResults({
         },
       });
     } else {
-      console.log('Appending JSON...');
       await appendJsonLog({
         data,
         assetSizes,
