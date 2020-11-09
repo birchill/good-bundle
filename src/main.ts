@@ -250,11 +250,14 @@ async function uploadResults({
     reportUrl,
   };
 
+  console.log(`Got format: ${JSON.stringify(output.format)}`);
   for (const format of output.format) {
     const filename = `bundle-stats-001.${format}`;
     const key = toKey(logFilename, output.destDir);
+    console.log(format, key);
 
     if (format === 'csv') {
+      console.log('Appending CSV...');
       await appendCsvLog({
         data,
         assetSizes,
@@ -266,6 +269,7 @@ async function uploadResults({
         },
       });
     } else {
+      console.log('Appending JSON...');
       await appendJsonLog({
         data,
         assetSizes,
