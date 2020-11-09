@@ -1,14 +1,13 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
-import * as fs from 'fs';
 import * as path from 'path';
 
 import { getBranch } from './branch';
 import { commentOnPr, getComparisonUrl } from './comment';
 import { OutputDestination, readConfig } from './config';
-import { serializeCsv } from './csv';
 import { PreviousRunData, getBaseRevision, fetchPreviousRun } from './history';
 import { logSizes } from './log';
+import { appendCsvLog, appendJsonLog, LogData } from './log-update';
 import { getManifest } from './manifest';
 import {
   AssetSummaryRecord,
@@ -235,68 +234,48 @@ async function uploadResults({
     });
   }
 
-  // Write log file
-  //
-  // XXX This needs to write both JSON and CSV formats
-  let contents =
-    '\n' +
-    assetSizes
-      .map((record) =>
-        serializeCsv([
-          output.project,
-          branch,
-          changeset,
-          commitMessage,
-          author,
-          avatar,
-          baseRevision,
-          compareUrl,
-          timestamp,
-          date,
-          record.name,
-          record.size,
-          record.compressedSize,
-          statsUrl,
-          reportUrl,
-        ])
-      )
-      .join('\n');
-  if (previousSizes) {
-    fs.appendFileSync(logFilename, contents);
-  } else {
-    const header = serializeCsv([
-      'project',
-      'branch',
-      'changeset',
-      'message',
-      'author',
-      'avatar',
-      'baseRevision',
-      'compare',
-      'timestamp',
-      'date',
-      'name',
-      'size',
-      'compressedSize',
-      'statsUrl',
-      'reportUrl',
-    ]);
-    contents = header + contents;
-    fs.writeFileSync(logFilename, contents);
+  // Update log file(s)
+  const data: LogData = {
+    project: output.project,
+    branch,
+    changeset,
+    commitMessage,
+    author,
+    avatar,
+    baseRevision,
+    compareUrl,
+    timestamp,
+    date,
+    statsUrl,
+    reportUrl,
+  };
+
+  for (const format of output.format) {
+    const filename = `bundle-stats-001.${format}`;
+    const key = toKey(logFilename, output.destDir);
+
+    if (format === 'csv') {
+      await appendCsvLog({
+        data,
+        assetSizes,
+        output: {
+          filename,
+          key,
+          s3,
+          bucket: output.bucket,
+        },
+      });
+    } else {
+      await appendJsonLog({
+        data,
+        assetSizes,
+        output: {
+          filename,
+          key,
+          s3,
+          bucket: output.bucket,
+        },
+      });
+    }
   }
-
-  // Upload log file
-  //
-  // (We do this last in case there are any errors along the way.)
-  core.info(`Uploading ${logKey} to ${output.bucket}...`);
-  await uploadFileToS3({
-    bucket: output.bucket,
-    key: logKey,
-    s3,
-    filePath: logFilename,
-    contentType: 'text/csv',
-  });
-
-  const logUrl = `https://${output.bucket}.s3-${output.region}.amazonaws.com/${logKey}`;
-  core.setOutput('logUrl', logUrl);
 }

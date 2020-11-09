@@ -31,6 +31,37 @@ export async function getS3Stream({
   return request.createReadStream();
 }
 
+export async function getS3Contents({
+  bucket,
+  key,
+  s3,
+  nullOnMissing,
+}: {
+  bucket: string;
+  key: string;
+  s3: AWS.S3;
+  nullOnMissing: boolean;
+}): Promise<string | null> {
+  try {
+    const response = await s3.getObject({ Bucket: bucket, Key: key }).promise();
+
+    if (typeof response.Body === 'string') {
+      return response.Body;
+    }
+
+    if (Buffer.isBuffer(response.Body)) {
+      return (response.Body as Buffer).toString('utf-8');
+    }
+
+    throw new Error('Unexpected body type');
+  } catch (e) {
+    if (e.code === 'NoSuchKey' && nullOnMissing) {
+      return null;
+    }
+    throw e;
+  }
+}
+
 export async function uploadFileToS3(params: {
   bucket: string;
   key: string;
