@@ -158,7 +158,6 @@ async function main(): Promise<void> {
         previousSizes: previousRun,
         logKey,
         assetSizes,
-        logFilename,
         baseRevision,
       });
     }
@@ -177,7 +176,6 @@ async function uploadResults({
   output,
   s3,
   logKey,
-  logFilename,
   assetSizes,
   previousSizes,
   baseRevision,
@@ -187,7 +185,6 @@ async function uploadResults({
   output: OutputDestination;
   s3: AWS.S3;
   logKey: string;
-  logFilename: string;
   assetSizes: Array<AssetSummaryRecord>;
   previousSizes: PreviousRunData | null;
   baseRevision: string;
@@ -250,10 +247,9 @@ async function uploadResults({
     reportUrl,
   };
 
-  console.log(`Got format: ${JSON.stringify(output.format)}`);
   for (const format of output.format) {
     const filename = `bundle-stats-001.${format}`;
-    const key = toKey(logFilename, output.destDir);
+    const key = toKey(filename, output.destDir);
     console.log(format, key);
 
     if (format === 'csv') {

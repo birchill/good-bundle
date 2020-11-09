@@ -158,11 +158,6 @@ function getOutputDestination(input: RawOutputDestination): OutputDestination {
     : typeof input.format !== 'undefined'
     ? [input.format]
     : ['csv'];
-  console.log(
-    input.format,
-    JSON.stringify(input.format),
-    JSON.stringify(format)
-  );
 
   if (
     typeof input.destDir !== 'string' &&
