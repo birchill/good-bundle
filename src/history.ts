@@ -41,6 +41,7 @@ async function fetchAndSaveCSV(
   changeset: string,
   destFile: string
 ): Promise<PreviousRunData | null> {
+  console.log(`Looking for data for ${changeset} in CSV file...`);
   const stream = cloneable(originalStream);
   const getPreviousSizes = new Promise<PreviousRunData | null>(
     (resolve, reject) => {
@@ -57,7 +58,9 @@ async function fetchAndSaveCSV(
         .pipe(csvParse({ headers: true }))
         .on('error', reject)
         .on('data', (row) => {
+          console.log(row);
           if (row.changeset === changeset) {
+            console.log('Got match');
             result[row.name] = {
               size: parseInt(row.size, 10),
               compressedSize: parseInt(row.compressedSize, 10),

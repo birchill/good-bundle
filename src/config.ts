@@ -131,7 +131,7 @@ function isArrayOfStrings(value: unknown): value is Array<string> {
 
 function getOutputDestination(input: RawOutputDestination): OutputDestination {
   if (!input || typeof input !== 'object') {
-    throw new Error('Invalid output destionation object');
+    throw new Error('Invalid output destination object');
   }
 
   const REQUIRED_KEYS: Array<keyof RawOutputDestination> = ['bucket', 'region'];
@@ -158,6 +158,11 @@ function getOutputDestination(input: RawOutputDestination): OutputDestination {
     : typeof input.format !== 'undefined'
     ? [input.format]
     : ['csv'];
+  console.log(
+    input.format,
+    JSON.stringify(input.format),
+    JSON.stringify(format)
+  );
 
   if (
     typeof input.destDir !== 'string' &&
