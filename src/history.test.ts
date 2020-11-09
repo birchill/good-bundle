@@ -53,9 +53,13 @@ myproject,main,64ba100160713350a85d09a4a4477c844a746aff,Patch 4,authorB,https://
             'https://github.com/myorg/myproject/compare/e0f0ef04f438...53c1f854b4f8',
           timestamp: 1602839157000,
           date: '2020-10-16T09:05:57.000Z',
-          name: 'myproject.js',
-          size: 182310,
-          compressedSize: 50231,
+          assets: [
+            {
+              name: 'myproject.js',
+              size: 182310,
+              compressedSize: 50231,
+            },
+          ],
           statsUrl:
             'https://bundlesize-stack-bundlestatsbucket-yer.s3-us-west-2.amazonaws.com/myproject/53c1f854b4f84352c36e93ddbe81e3d42faffc36-stats.json',
           reportUrl: '',
@@ -72,9 +76,9 @@ myproject,main,64ba100160713350a85d09a4a4477c844a746aff,Patch 4,authorB,https://
             'https://github.com/myorg/myproject/compare/53c1f854b4f8...21b00f78c20f',
           timestamp: 1602840593000,
           date: '2020-10-16T09:29:53.000Z',
-          name: 'myproject.js',
-          size: 182310,
-          compressedSize: 50231,
+          assets: [
+            { name: 'myproject.js', size: 182310, compressedSize: 50231 },
+          ],
           statsUrl:
             'https://bundlesize-stack-bundlestatsbucket-yer.s3-us-west-2.amazonaws.com/myproject/21b00f78c20fa7eb7721ff5dfbfca6fbd6d01ab8-stats.json',
           reportUrl: '',
@@ -91,9 +95,13 @@ myproject,main,64ba100160713350a85d09a4a4477c844a746aff,Patch 4,authorB,https://
             'https://github.com/myorg/myproject/compare/21b00f78c20f...3549a13f4f63',
           timestamp: 1602840701000,
           date: '2020-10-16T09:31:41.000Z',
-          name: 'myproject.js',
-          size: 182310,
-          compressedSize: 50253,
+          assets: [
+            {
+              name: 'myproject.js',
+              size: 182310,
+              compressedSize: 50253,
+            },
+          ],
           statsUrl:
             'https://bundlesize-stack-bundlestatsbucket-yer.s3-us-west-2.amazonaws.com/myproject/3549a13f4f639d95b600337d5e3c760e7a7d0097-stats.json',
           reportUrl: '',
@@ -110,9 +118,9 @@ myproject,main,64ba100160713350a85d09a4a4477c844a746aff,Patch 4,authorB,https://
             'https://github.com/myorg/myproject/compare/3549a13f4f63...64ba10016071',
           timestamp: 1602840837000,
           date: '2020-10-16T09:33:57.000Z',
-          name: 'myproject.js',
-          size: 182310,
-          compressedSize: 50253,
+          assets: [
+            { name: 'myproject.js', size: 182310, compressedSize: 50253 },
+          ],
           statsUrl:
             'https://bundlesize-stack-bundlestatsbucket-yer.s3-us-west-2.amazonaws.com/myproject/64ba100160713350a85d09a4a4477c844a746aff-stats.json',
           reportUrl: '',

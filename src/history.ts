@@ -7,6 +7,7 @@ import { pipeline as callbackPipeline, Readable } from 'stream';
 import { promisify } from 'util';
 
 import { OutputFormat } from './config';
+import { AssetSummaryRecord } from './measure';
 
 const pipeline = promisify(callbackPipeline);
 
@@ -106,11 +107,10 @@ async function fetchAndSaveJson(
   const result: PreviousRunData = {};
   for (const record of contents) {
     if (isJsonRecord(record) && record.changeset === changeset) {
-      result[record.name] = {
-        size: record.size,
-        compressedSize: record.compressedSize,
-        statsUrl: record.statsUrl,
-      };
+      for (const asset of record.assets) {
+        const { name, size, compressedSize } = asset;
+        result[name] = { size, compressedSize, statsUrl: record.statsUrl };
+      }
     }
   }
 
@@ -119,9 +119,7 @@ async function fetchAndSaveJson(
 
 interface JsonRecord {
   changeset: string;
-  name: string;
-  size: number;
-  compressedSize: number;
+  assets: Array<AssetSummaryRecord>;
   statsUrl?: string;
 }
 
@@ -134,6 +132,28 @@ function isJsonRecord(record: unknown): record is JsonRecord {
     return false;
   }
 
+  if (
+    !Array.isArray((record as any).assets) ||
+    !(record as any).assets.every(isAssetRecord)
+  ) {
+    return false;
+  }
+
+  if (
+    typeof (record as any).statsUrl !== 'string' &&
+    typeof (record as any).statsUrl !== 'undefined'
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+function isAssetRecord(record: unknown): record is AssetSummaryRecord {
+  if (!record || typeof record !== 'object') {
+    return false;
+  }
+
   if (typeof (record as any).name !== 'string') {
     return false;
   }
@@ -143,13 +163,6 @@ function isJsonRecord(record: unknown): record is JsonRecord {
   }
 
   if (typeof (record as any).compressedSize !== 'number') {
-    return false;
-  }
-
-  if (
-    typeof (record as any).statsUrl !== 'string' &&
-    typeof (record as any).statsUrl !== 'undefined'
-  ) {
     return false;
   }
 

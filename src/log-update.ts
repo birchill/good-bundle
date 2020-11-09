@@ -151,14 +151,17 @@ export async function appendJsonLog({
     }
   }
 
-  for (const record of assetSizes) {
-    arrayToWrite.push({
-      ...data,
-      name: record.name,
-      size: record.size,
-      compressedSize: record.compressedSize,
-    });
-  }
+  // Just write a single record.
+  //
+  // From a structured-data point of view, that seems the most logical thing to
+  // do (and reduces the log file size).
+  //
+  // But maybe analytics tools would find it easier if we wrote separate
+  // records for each asset?
+  arrayToWrite.push({
+    ...data,
+    assets: assetSizes,
+  });
 
   fs.writeFileSync(output.filename, JSON.stringify(arrayToWrite));
 
