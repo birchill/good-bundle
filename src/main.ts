@@ -32,11 +32,11 @@ async function main(): Promise<void> {
     });
 
     // Read config
-    const { assets, output, statsFile } = await readConfig();
+    const { assets, output, compression, statsFile } = await readConfig();
 
     // Measure asset sizes
     const assetSizes = groupAssetRecordsByName(
-      await measureAssetSizes(assets, { log: true })
+      await measureAssetSizes(assets, { compression, log: true })
     );
 
     // Output total size

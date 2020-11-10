@@ -9,7 +9,7 @@ or visualize and analyze the change over time.
 Statistics gathered for each configured asset:
 
 - Bundle size (uncompressed)
-- Bundle size (brotli compressed)
+- Bundle size (brotli/gzip compressed)
 
 Other features:
 
@@ -30,7 +30,7 @@ That said, it does have a few advantages:
 - It comments on PRs
   (This feature is coming to Relative CI so hopefully this point will be moot
   in the near future.)
-- Reports brotli compressed size
+- Can report brotli compressed size
   (maybe you're lucky enough to be serving assets using Brotli)
 
 ## Setup
@@ -95,11 +95,6 @@ Keys:
 
 - `output` (required) - Where to write the results to.
 
-  - `format` (optional) - `"csv"` or `"json"`. Defaults to `"csv"`.
-    An array may be specified to output to CSV and JSON.
-    The first format listed in the array will be treated as the primary source
-    when looking for historical results to compare the current result against.
-
   - `bucket` (required) - The S3 bucket in which to store the result.
     If a webpack stats file is specified (see `stats` below), it will also be
     stored along with the report generated using `webpack-bundle-analyzer`.
@@ -108,10 +103,17 @@ Keys:
 
   - `region` (required) - The AWS region of the bucket, e.g. `ap-northeast-1`.
 
+  - `format` (optional) - `"csv"` or `"json"`. Defaults to `"csv"`.
+    An array may be specified to output to CSV and JSON.
+    The first format listed in the array will be treated as the primary source
+    when looking for historical results to compare the current result against.
+
   - `project` (optional) - A descriptive name to use for the project.
     This is added to each record in the output file and is useful if you are
     logging multiple projects to the same file.
     Defaults to `owner/repository`.
+
+- `compression` (optional) - `"brotli"` or `"gzip"`. Defaults to `"brotli"`.
 
 - `stats` (optional) - Path to a webpack compilation stats file.
 
@@ -160,6 +162,7 @@ While for a project with multiple assets using chunking, you might have:
     "region": "us-west-2",
     "project": "fe"
   },
+  "compression": "gzip",
   "stats": "webpack-stats.json"
 }
 ```

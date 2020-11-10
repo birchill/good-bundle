@@ -6,6 +6,7 @@ import fg from 'fast-glob';
 export type Config = {
   assets: { [name: string]: Array<string> };
   output: OutputDestination;
+  compression: 'brotli' | 'gzip';
   statsFile?: string;
 };
 
@@ -22,6 +23,7 @@ export type OutputDestination = {
 type RawConfig = {
   assets: { [name: string]: string | Array<string> };
   output: RawOutputDestination;
+  compression?: 'brotli' | 'gzip';
   stats?: string;
 };
 
@@ -63,6 +65,19 @@ export async function readConfig(): Promise<Config> {
   }
   const output = getOutputDestination(config.output);
 
+  // Validate compression
+  let compression: 'gzip' | 'brotli';
+  if (typeof config.compression === 'string') {
+    if (!['gzip', 'brotli'].includes(config.compression)) {
+      throw new Error(
+        `Un-recognized compression type: "${config.compression}"`
+      );
+    }
+    compression = config.compression;
+  } else {
+    compression = 'brotli';
+  }
+
   // Validate stats file
   let statsFile: string | undefined;
   if (typeof config.stats === 'string') {
@@ -75,6 +90,7 @@ export async function readConfig(): Promise<Config> {
   return {
     assets,
     output,
+    compression,
     statsFile,
   };
 }

@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 
-import { getCompressedSize } from './brotli';
+import { getCompressedSize } from './compress';
 import { formatBytes } from './format';
 
 type AssetSpec = {
@@ -16,7 +16,10 @@ type AssetRecord = {
 
 export async function measureAssetSizes(
   assets: AssetSpec,
-  { log = false }: { log?: boolean } = {}
+  {
+    compression,
+    log = false,
+  }: { compression: 'brotli' | 'gzip'; log?: boolean }
 ): Promise<Array<AssetRecord>> {
   const result: Array<AssetRecord> = [];
 
@@ -30,7 +33,7 @@ export async function measureAssetSizes(
 
     for (const path of paths) {
       const { size } = fs.statSync(path);
-      const compressedSize = await getCompressedSize(path);
+      const compressedSize = await getCompressedSize(path, compression);
       result.push({ name, path, size, compressedSize });
 
       assetTotal += size;
