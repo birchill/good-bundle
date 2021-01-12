@@ -12,7 +12,7 @@
     "@actions/github": "^4.0.0",
     "@fast-csv/parse": "^4.3.6",
     "aws-sdk": "^2.825.0",
-    "cloneable-readable": "^2.0.1",
+    "cloneable-readable": "^2.1.0",
     "fast-glob": "^3.2.4"
   },
   "devDependencies": {
