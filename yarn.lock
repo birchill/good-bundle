@@ -1153,10 +1153,10 @@ cliui@^6.0.0:
     strip-ansi "^6.0.0"
     wrap-ansi "^6.2.0"
 
-cloneable-readable@^2.0.1:
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/cloneable-readable/-/cloneable-readable-2.0.1.tgz#fc2240beddbe5621b872acad8104dcc86574e225"
-  integrity sha512-1ke/wckhpSevGPQzKb+qGHMsuFrSUKQlsKh0PTmscmfAzw8MgONqrg5a0e0Un1YO/cOSS4wAepfXSGus5RoonQ==
+cloneable-readable@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/cloneable-readable/-/cloneable-readable-2.1.0.tgz#865742bfdcd3782e5fdd98d659aa06b575938c09"
+  integrity sha512-GP0FuTTREdvgNQwJzvLVcPCrHwsryC/KSrDlrWM3nyXpvskmAwT55G8LwQpjS5VHrZfaeqABwSOdYBuuqUzRfQ==
   dependencies:
     inherits "^2.0.1"
     readable-stream "^3.3.0"
