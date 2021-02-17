@@ -235,7 +235,6 @@ async function uploadResults({
   }
 
   // Update log file(s)
-  console.log('Preparing log files...');
   const data: LogData = {
     project: output.project,
     branch,
