@@ -43,7 +43,11 @@ export async function getS3Contents({
   nullOnMissing: boolean;
 }): Promise<string | null> {
   try {
+    console.log(
+      `Fetching ${bucket}/${key}... (nullOnMissing: ${nullOnMissing})`
+    );
     const response = await s3.getObject({ Bucket: bucket, Key: key }).promise();
+    console.log('Success');
 
     if (typeof response.Body === 'string') {
       return response.Body;
@@ -55,6 +59,10 @@ export async function getS3Contents({
 
     throw new Error('Unexpected body type');
   } catch (e) {
+    console.log('Got error');
+    console.log(e);
+    console.log('e.code', e.code);
+    console.log(JSON.stringify(e));
     if (e.code === 'NoSuchKey' && nullOnMissing) {
       return null;
     }
