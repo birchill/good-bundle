@@ -65,14 +65,18 @@ export async function appendCsvLog({
   // Download existing data (if we haven't already)
   let newFile = false;
   if (!fs.existsSync(output.filename)) {
-    const stream = await getS3Stream({
-      bucket: output.bucket,
-      key: output.key,
-      s3: output.s3,
-    });
     try {
+      const stream = await getS3Stream({
+        bucket: output.bucket,
+        key: output.key,
+        s3: output.s3,
+      });
       await pipeline(stream, fs.createWriteStream(output.filename));
     } catch (e) {
+      console.log('Got error');
+      console.log(e);
+      console.log('e.code', e.code);
+      console.log(JSON.stringify(e.code, null, 2));
       if (e.code === 'NoSuchKey') {
         newFile = true;
       }
@@ -134,12 +138,14 @@ export async function appendJsonLog({
   if (fs.existsSync(output.filename)) {
     contents = fs.readFileSync(output.filename, { encoding: 'utf-8' });
   } else {
+    console.log(`Fetching ${output.key}...`);
     contents = await getS3Contents({
       bucket: output.bucket,
       key: output.key,
       s3: output.s3,
       nullOnMissing: true,
     });
+    console.log(`Fetched. Was null? ${contents === null}`);
   }
 
   // Write to the file
