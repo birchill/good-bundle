@@ -103,6 +103,7 @@ async function _uploadToS3({
   const CacheControl = immutable
     ? 'public, max-age=31536000'
     : 'no-cache, max-age=0';
+  const Tagging = immutable ? 'Type=Artifact' : undefined;
 
   const params: S3.Types.PutObjectRequest = {
     Bucket: bucket,
@@ -111,6 +112,7 @@ async function _uploadToS3({
     ACL: 'public-read',
     ContentType: contentType,
     CacheControl,
+    Tagging,
   };
 
   await s3.putObject(params).promise();
