@@ -4,14 +4,28 @@ Description: Bucket for storing bundle information allow with a user to access i
 Resources:
   BundleStatsBucket:
     Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
     Properties:
       CorsConfiguration:
         CorsRules:
-        - AllowedHeaders: ['*']
-          AllowedMethods: [GET, HEAD]
-          AllowedOrigins: ['*']
-          ExposedHeaders: [Content-Length, Content-Encoding]
+          - AllowedHeaders: ['*']
+            AllowedMethods: [GET, HEAD]
+            AllowedOrigins: ['*']
+            ExposedHeaders: [Content-Length, Content-Encoding]
+      LifecycleConfiguration:
+        Rules:
+          - Id: RetireArtifacts
+            Status: Enabled
+            ExpirationInDays: 730
+            TagFilters:
+              - Key: Type
+                Value: Artifact
+            Transitions:
+              - TransitionInDays: 30
+                StorageClass: STANDARD_IA
+              - TransitionInDays: 183
+                StorageClass: GLACIER
       VersioningConfiguration:
         Status: Enabled
 
@@ -19,22 +33,22 @@ Resources:
     Type: AWS::IAM::User
     Properties:
       Policies:
-      - PolicyName: ReadWriteAccessToBucket
-        PolicyDocument:
-          Version: '2012-10-17'
-          Statement:
-          - Effect: Allow
-            Action:
-            - s3:ListBucket
-            Resource:
-            - !GetAtt BundleStatsBucket.Arn
-          - Effect: Allow
-            Action:
-            - s3:GetObject
-            - s3:PutObject
-            - s3:PutObjectAcl
-            Resource:
-            - !Sub "arn:aws:s3:::${BundleStatsBucket}/*"
+        - PolicyName: ReadWriteAccessToBucket
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                Resource:
+                  - !GetAtt BundleStatsBucket.Arn
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:PutObjectAcl
+                Resource:
+                  - !Sub 'arn:aws:s3:::${BundleStatsBucket}/*'
 
   AccessKey:
     Type: AWS::IAM::AccessKey
@@ -44,13 +58,13 @@ Resources:
 
 Outputs:
   BucketName:
-    Description: "Bucket name"
+    Description: 'Bucket name'
     Value: !Ref BundleStatsBucket
 
   AccessKey:
-    Description: "Access key for bucket reader/writer"
+    Description: 'Access key for bucket reader/writer'
     Value: !Ref AccessKey
 
   SecretAccessKey:
-    Description: "Secret access key for bucket reader/writer"
+    Description: 'Secret access key for bucket reader/writer'
     Value: !GetAtt AccessKey.SecretAccessKey
