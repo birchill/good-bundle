@@ -7,7 +7,7 @@
   "author": "Brian Birtles <birtles@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "@actions/core": "^1.2.6",
+    "@actions/core": "^1.2.7",
     "@actions/exec": "^1.0.4",
     "@actions/github": "^4.0.0",
     "@fast-csv/parse": "^4.3.6",
