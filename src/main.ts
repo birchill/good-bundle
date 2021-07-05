@@ -40,6 +40,13 @@ async function main(): Promise<void> {
     // Read config
     const { assets, output, compression, statsFile } = await readConfig();
 
+    // Get current commit
+    //
+    // Note that it seems like GITHUB_SHA for a PR actually points to the
+    // base revision, not the head.
+    const changeset = github.context.payload.head?.sha || process.env.GITHUB_SHA;
+    console.log(`Changeset: ${changeset}`);
+
     // Measure asset sizes
     const assetSizes = groupAssetRecordsByName(
       await measureAssetSizes(assets, { compression, log: true })
@@ -112,10 +119,7 @@ async function main(): Promise<void> {
     // We do this even for PRs since we use it in the PR comment.
     let statsUrl = '';
     if (statsFile) {
-      const statsKey = toKey(
-        `${process.env.GITHUB_SHA}-stats.json`,
-        output.destDir
-      );
+      const statsKey = toKey(`${changeset}-stats.json`, output.destDir);
       core.info(`Uploading ${statsKey} to ${output.bucket}...`);
       await uploadFileToS3({
         bucket: output.bucket,
@@ -139,10 +143,7 @@ async function main(): Promise<void> {
 
     let reportUrl = '';
     if (reportFile) {
-      const reportKey = toKey(
-        `${process.env.GITHUB_SHA}-report.html`,
-        output.destDir
-      );
+      const reportKey = toKey(`${changeset}-report.html`, output.destDir);
       core.info(`Uploading ${reportKey} to ${output.bucket}...`);
       await uploadFileToS3({
         bucket: output.bucket,
@@ -162,6 +163,7 @@ async function main(): Promise<void> {
       await commentOnPr(assetSizes, previousRun || {}, reportUrl, statsUrl);
     } else if (github.context.eventName === 'push') {
       await uploadResults({
+        changeset,
         statsUrl,
         reportUrl,
         output,
@@ -182,6 +184,7 @@ async function main(): Promise<void> {
 main();
 
 async function uploadResults({
+  changeset,
   statsUrl,
   reportUrl,
   output,
@@ -191,6 +194,7 @@ async function uploadResults({
   previousSizes,
   baseRevision,
 }: {
+  changeset: string;
   statsUrl: string | undefined;
   reportUrl: string | undefined;
   output: OutputDestination;
@@ -202,7 +206,6 @@ async function uploadResults({
 }) {
   // Collect various metadata
   const branch = getBranch();
-  const changeset = process.env.GITHUB_SHA;
   const context = github.context;
   const headCommit = context.payload.head_commit;
 
