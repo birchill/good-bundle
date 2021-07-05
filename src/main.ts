@@ -44,7 +44,8 @@ async function main(): Promise<void> {
     //
     // Note that it seems like GITHUB_SHA for a PR actually points to the
     // base revision, not the head.
-    const changeset = github.context.payload.head?.sha || process.env.GITHUB_SHA;
+    const changeset =
+      github.context.payload.pull_request?.head.sha || process.env.GITHUB_SHA;
     console.log(`Changeset: ${changeset}`);
 
     // Measure asset sizes
