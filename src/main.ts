@@ -24,12 +24,6 @@ import {
 } from './s3';
 
 async function main(): Promise<void> {
-  console.log('main');
-  console.log(`  GITHUB_SHA: ${process.env.GITHUB_SHA}`);
-  console.log(`  GITHUB_REF: ${process.env.GITHUB_REF}`);
-  console.log(`  GITHUB_HEAD_REF: ${process.env.GITHUB_HEAD_REF}`);
-  console.log(`  GITHUB_BASE_REF: ${process.env.GITHUB_BASE_REF}`);
-
   try {
     // Get credentials
     const awsAccessKey = core.getInput('AWS_ACCESS_KEY_ID', { required: true });
@@ -41,19 +35,12 @@ async function main(): Promise<void> {
     const { assets, output, compression, statsFile } = await readConfig();
 
     // Get current commit
-    //
-    // Note that it seems like GITHUB_SHA for a PR actually points to the
-    // base revision, not the head.
-    const changeset =
-      github.context.payload.pull_request?.head.sha || process.env.GITHUB_SHA;
-    console.log(`Changeset: ${changeset}`);
+    const changeset = process.env.GITHUB_SHA!;
 
     // Measure asset sizes
     const assetSizes = groupAssetRecordsByName(
       await measureAssetSizes(assets, { compression, log: true })
     );
-    console.log('assetSizes');
-    console.log(JSON.stringify(assetSizes, null, 2));
 
     // Output total size
     const [totalSize, totalCompressedSize] = assetSizes.reduce(
@@ -86,15 +73,12 @@ async function main(): Promise<void> {
 
     // Get existing sizes
     const baseRevision = await getBaseRevision();
-    console.log(`baseRevision: ${baseRevision}`);
     const previousRun = await fetchPreviousRun({
       stream: logStream,
       format,
       destFile: path.join(__dirname, logFilename),
       changeset: baseRevision,
     });
-    console.log('previousRun');
-    console.log(JSON.stringify(previousRun, null, 2));
 
     // Print difference to console
     logSizes(assetSizes, previousRun || {});

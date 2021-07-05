@@ -1,5 +1,8 @@
 # Good bundle action
 
+**NOTE: Please don't use this. It needs major rework since the whole integration
+with GitHub actions is wrong.**
+
 ## What is this?
 
 A GitHub action that collects bundle size statistics and stores them in an S3
@@ -27,11 +30,9 @@ That said, it does have a few advantages:
 
 - You own your data in S3 so you can slice and dice it as you please
 - For example, you can use the data in your own custom visualizations
-- It comments on PRs
-  (This feature is coming to Relative CI so hopefully this point will be moot
-  in the near future.)
+  (actually this is the same as the first point)
 - Can report brotli compressed size
-  (maybe you're lucky enough to be serving assets using Brotli)
+  (not that it really matters -- you probably care more about the uncompressed size)
 
 ## Setup
 
@@ -182,6 +183,8 @@ Inputs:
   is used to add comments to PRs.
 
 For example:
+
+**(The following in particular is very wrong. For `pull_request_target` it will run against the base commit, not the head of the commit.)**
 
 ```yaml
 name: Record bundle stats
