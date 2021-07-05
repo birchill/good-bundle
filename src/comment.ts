@@ -82,7 +82,7 @@ export async function commentOnPr(
   }
 
   const octokit = github.getOctokit(token);
-  await octokit.issues.createComment({
+  await octokit.rest.issues.createComment({
     owner: github.context.repo.owner,
     repo: github.context.repo.repo,
     issue_number: prNumber,

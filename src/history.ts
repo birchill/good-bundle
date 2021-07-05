@@ -170,15 +170,25 @@ function isAssetRecord(record: unknown): record is AssetSummaryRecord {
 }
 
 export async function getBaseRevision(): Promise<string> {
+  console.log('getBaseRevision');
+  console.log(JSON.stringify(github.context.payload, null, 2));
+
   // For a pull request, we should use the latest commit from the target branch.
   if (github.context.payload.pull_request) {
+    console.log(
+      `  is PR, using getBranchHeadRev with ${process.env.GITHUB_BASE_REF}`
+    );
     return getBranchHeadRev(process.env.GITHUB_BASE_REF!);
   } else {
+    console.log(
+      `  not PR, returning previous commit: ${github.context.payload.before}`
+    );
     return github.context.payload.before;
   }
 }
 
 async function getBranchHeadRev(branch: string): Promise<string> {
+  console.log(`getBranchHeadRev(${branch})`);
   let result: string = '';
   const options: ExecOptions = {
     cwd: process.env.GITHUB_WORKSPACE,
@@ -192,6 +202,8 @@ async function getBranchHeadRev(branch: string): Promise<string> {
   };
 
   await exec(`git rev-parse ${branch}`, [], options);
+
+  console.log(`  git rev-parse ${branch} gave: ${result}`);
 
   return result.trim();
 }
