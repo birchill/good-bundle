@@ -8,7 +8,13 @@ export function serializeCsv(input: Array<string | number>): string {
 
     if (typeof item === 'number') {
       result += item;
-    } else if (item.includes('"') || item.includes(',')) {
+    } else if (typeof item === 'undefined') {
+      // serialize undefined as an empty element
+      result += '';
+    } else if (
+      Array.isArray(item) &&
+      (item.includes('"') || item.includes(','))
+    ) {
       result += `"${item.replace(/"/g, '""')}"`;
     } else {
       result += item;
