@@ -11,10 +11,7 @@ export function serializeCsv(input: Array<string | number>): string {
     } else if (typeof item === 'undefined') {
       // serialize undefined as an empty element
       result += '';
-    } else if (
-      Array.isArray(item) &&
-      (item.includes('"') || item.includes(','))
-    ) {
+    } else if (item.includes('"') || item.includes(',')) {
       result += `"${item.replace(/"/g, '""')}"`;
     } else {
       result += item;
