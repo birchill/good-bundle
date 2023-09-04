@@ -16,7 +16,7 @@
     "fast-glob": "3.3.1"
   },
   "devDependencies": {
-    "@types/cloneable-readable": "2.0.0",
+    "@types/cloneable-readable": "2.0.1",
     "@types/jest": "29.5.4",
     "@types/node": "20.5.9",
     "@vercel/ncc": "0.36.1",
