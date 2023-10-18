@@ -1058,10 +1058,10 @@
   dependencies:
     "@babel/types" "^7.3.0"
 
-"@types/cloneable-readable@2.0.1":
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/@types/cloneable-readable/-/cloneable-readable-2.0.1.tgz#1c814d8735518abc3cced26034cc8a12389792d2"
-  integrity sha512-JdIAEyLh8OJmlg6/QF0LWkjWollQzK5KGNJ/bdyWkSA7Y+nWXwi3Pto/3aeW+xzr5zECRjHHpFHeZgAXws1OMQ==
+"@types/cloneable-readable@2.0.2":
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/@types/cloneable-readable/-/cloneable-readable-2.0.2.tgz#412d57130991ed877b6726bb84499a24ac0083aa"
+  integrity sha512-MxGU48KObSyqUZNEROmCsTd+uZYPEh+U7u8gBk7AbyhSELyzJifePOIaUSH+iB1pS8c++UAbKT6g2H1xLduB+A==
   dependencies:
     "@types/node" "*"
 
