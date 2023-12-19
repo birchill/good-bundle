@@ -11,7 +11,7 @@
     "@actions/exec": "1.1.1",
     "@actions/github": "6.0.0",
     "@fast-csv/parse": "4.3.6",
-    "aws-sdk": "2.1521.0",
+    "aws-sdk": "2.1522.0",
     "cloneable-readable": "3.0.0",
     "fast-glob": "3.3.2"
   },
