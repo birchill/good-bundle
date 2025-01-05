@@ -13,7 +13,7 @@
     "@fast-csv/parse": "5.0.2",
     "aws-sdk": "2.1692.0",
     "cloneable-readable": "3.0.0",
-    "fast-glob": "3.3.2"
+    "fast-glob": "3.3.3"
   },
   "devDependencies": {
     "@types/cloneable-readable": "2.0.3",
