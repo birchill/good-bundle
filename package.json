@@ -10,7 +10,7 @@
     "@actions/core": "1.11.1",
     "@actions/exec": "1.1.1",
     "@actions/github": "6.0.1",
-    "@fast-csv/parse": "5.0.2",
+    "@fast-csv/parse": "5.0.5",
     "aws-sdk": "2.1692.0",
     "cloneable-readable": "3.0.0",
     "fast-glob": "3.3.3"
