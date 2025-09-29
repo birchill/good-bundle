@@ -1,7 +1,8 @@
 # Good bundle action
 
-**NOTE: Please don't use this. It needs major rework since the whole integration
-with GitHub actions is wrong.**
+> [!CAUTION]
+> **Please don't use this. It needs major rework since the whole integration
+> with GitHub Actions is wrong.**
 
 ## What is this?
 
@@ -95,7 +96,6 @@ Keys:
   webpack.
 
 - `output` (required) - Where to write the results to.
-
   - `bucket` (required) - The S3 bucket in which to store the result.
     If a webpack stats file is specified (see `stats` below), it will also be
     stored along with the report generated using `webpack-bundle-analyzer`.
